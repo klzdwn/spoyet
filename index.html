@@ -180,6 +180,7 @@ async function ytSearch(q){
   return j.items || [];
 }
 
+/* single video details (used when user pastes a URL) */
 async function videoDetails(id){
   const url = new URL("https://www.googleapis.com/youtube/v3/videos");
   url.search = new URLSearchParams({
@@ -225,7 +226,7 @@ function renderItems(items){
         <div class="title">${escapeHtml(title)}</div>
         <div class="sub">${escapeHtml(channel)}</div>
         <div class="controls">
-          <button class="playBtn playBtnNeon" data-id="${vid}" data-thumb="${thumb}" data-title="${escapeHtml(title)}" data-channel="${escapeHtml(channel)}">Play</button>
+          <button class="playBtn playBtnNeon" data-id="${vid}" data-thumb="${escapeHtml(thumb)}" data-title="${escapeHtml(title)}" data-channel="${escapeHtml(channel)}">Play</button>
           <a class="linkBtn" target="_blank" rel="noopener noreferrer" href="https://www.youtube.com/watch?v=${vid}">YouTube</a>
         </div>
       </div>
@@ -261,11 +262,36 @@ function attachPlayHandlers(){
 function escapeHtml(s){ return String(s||"").replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
 /* ===== YouTube IFrame player integration ===== */
+
+/* Ensure hidden player element exists BEFORE YT API tries to attach */
+function ensureHiddenPlayerEl(){
+  let div = document.getElementById("yt-hidden-player");
+  if (!div){
+    div = document.createElement("div");
+    div.id = "yt-hidden-player";
+    // keep it offscreen but present in DOM
+    div.style.width = "0";
+    div.style.height = "0";
+    div.style.position = "absolute";
+    div.style.left = "-9999px";
+    document.body.appendChild(div);
+  }
+}
+
+/* This function will be called by YouTube API when ready */
 function onYouTubeIframeAPIReady(){
-  ytPlayer = new YT.Player(document.createElement("div"),{
-    height:"0",width:"0",videoId:"",playerVars:{playsinline:1,rel:0,modestbranding:1},
-    events:{onStateChange:onStateChange, onError:onPlayerError}
-  });
+  ensureHiddenPlayerEl();
+  try {
+    ytPlayer = new YT.Player("yt-hidden-player", {
+      height: "0",
+      width: "0",
+      videoId: "",
+      playerVars: { playsinline: 1, rel: 0, modestbranding: 1 },
+      events: { onStateChange: onStateChange, onError: onPlayerError }
+    });
+  } catch (e) {
+    console.error("Failed to create YT player:", e);
+  }
 }
 
 function onStateChange(e){
@@ -283,7 +309,8 @@ function onStateChange(e){
 
 function onPlayerError(e){
   console.error("YT Player error", e);
-  alert("Playback error. Try another track.");
+  // show non-blocking message
+  try { alert("Playback error. Try another track."); } catch(e){}
   nextTrack();
 }
 
@@ -297,10 +324,15 @@ function loadAtIndex(i){
   openYT.onclick = ()=>window.open(`https://www.youtube.com/watch?v=${it.id}`,'_blank');
   // load into player but do not play automatically until playVideo is called
   if (ytPlayer && typeof ytPlayer.loadVideoById === "function"){
-    ytPlayer.loadVideoById(it.id);
+    try{
+      ytPlayer.loadVideoById(it.id);
+    }catch(e){
+      // fallback: try later
+      setTimeout(()=>{ if (ytPlayer && typeof ytPlayer.loadVideoById === "function") ytPlayer.loadVideoById(it.id); },500);
+    }
   } else {
     // try later when player ready
-    setTimeout(()=>{ if (ytPlayer) ytPlayer.loadVideoById(it.id); },500);
+    setTimeout(()=>{ if (ytPlayer && typeof ytPlayer.loadVideoById === "function") ytPlayer.loadVideoById(it.id); },500);
   }
 }
 
@@ -313,7 +345,6 @@ function playVideo(){
 }
 function pauseVideo(){ if (ytPlayer) ytPlayer.pauseVideo(); }
 function nextTrack(){ if (currentIndex < playlist.length - 1){ currentIndex++; loadAtIndex(currentIndex); playVideo(); } else { // end of list
-  // stop playback
   if (ytPlayer) ytPlayer.stopVideo();
   }
 }
@@ -364,31 +395,9 @@ nextBtn.onclick = ()=>nextTrack();
 /* keyboard enter */
 qEl.addEventListener("keydown", (e)=>{ if (e.key==='Enter') goBtn.click(); });
 
-/* initial demo (optional) */
-// qEl.value = "lofi hip hop live";
-// goBtn.click();
+/* initial safety: ensure hidden player exists in case API loads later */
+ensureHiddenPlayerEl();
 
-/* expose videoDetails in global scope for internal use */
-async function videoDetails(id){
-  const url = new URL("https://www.googleapis.com/youtube/v3/videos");
-  url.search = new URLSearchParams({ key: API_KEY, id, part: "snippet,contentDetails" });
-  const r = await fetch(url);
-  if (!r.ok) throw new Error("Video details error: "+r.status);
-  const j = await r.json();
-  // map to same shape as search results
-  if (!j.items || !j.items.length) return null;
-  return { id: j.items[0].id, snippet: j.items[0].snippet };
-}
-
-/* fallback safety: create player DOM element (YT API requires an element) */
-(function createHiddenPlayerEl(){
-  const div = document.createElement("div");
-  div.id = "yt-hidden-player";
-  div.style.display = "none";
-  document.body.appendChild(div);
-})();
-
-/* End of script */
 </script>
 </body>
 </html>
