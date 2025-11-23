@@ -3,35 +3,52 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>NeonTube — Bottom sheet player (fixed)</title>
-<meta name="description" content="NeonTube — improved bottom sheet with YouTube IFrame API">
+<title>NeonTube — Dark Futuristic Music Player</title>
+<meta name="description" content="Dark neon YouTube music player — search & play full tracks. Single-file.">
 <style>
   :root{
-    --bg:#05060a; --muted:#97a1b5; --neon1:#00f5ff; --neon2:#7c4dff;
+    --bg:#05060a;
+    --panel:#071229;
+    --muted:#97a1b5;
+    --neon1:#00f5ff;
+    --neon2:#7c4dff;
+    --accent:linear-gradient(90deg,var(--neon1),var(--neon2));
+    --glass:rgba(255,255,255,0.03);
   }
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;font-family:Inter,system-ui,Roboto,Arial;background:
-    radial-gradient(1200px 600px at 10% 10%, rgba(124,77,255,0.06), transparent),
-    radial-gradient(800px 400px at 90% 90%, rgba(0,245,255,0.04), transparent),
-    var(--bg); color:#e6f4ff}
+  html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;background:radial-gradient(1200px 600px at 10% 10%, rgba(124,77,255,0.06), transparent), radial-gradient(800px 400px at 90% 90%, rgba(0,245,255,0.04), transparent), var(--bg); color:#e6f4ff; -webkit-font-smoothing:antialiased}
   .wrap{max-width:1080px;margin:18px auto;padding:14px}
   header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
   .logo{display:flex;align-items:center;gap:10px}
-  .mark{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#0ff,#7c4dff);display:flex;align-items:center;justify-content:center}
-  h1{font-size:18px;margin:0}
+  .mark{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#0ff,#7c4dff);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 30px rgba(124,77,255,0.12),0 2px 8px rgba(0,245,255,0.06)}
+  .mark svg{filter:drop-shadow(0 6px 12px rgba(0,245,255,0.08))}
+  h1{font-size:18px;margin:0;letter-spacing:0.6px}
   p.lead{margin:2px 0 0;color:var(--muted);font-size:13px}
+
   .searchbar{display:flex;gap:10px;margin-top:14px}
-  .input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));color:#dff6ff}
-  .btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px 14px;border-radius:12px;color:var(--neon1);font-weight:700;cursor:pointer}
-  .btn.primary{background:linear-gradient(90deg,#00f5ff33,#7c4dff33);color:#fff}
+  .input{
+    flex:1;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    color:#dff6ff;font-size:15px;outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,0.02);
+  }
+  .btn{
+    background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px 14px;border-radius:12px;color:var(--neon1);font-weight:700;cursor:pointer;
+  }
+  .btn.primary{background:linear-gradient(90deg,#00f5ff33,#7c4dff33);border:1px solid rgba(255,255,255,0.04);color:#fff}
+
   .content{display:grid;grid-template-columns:1fr 360px;gap:16px;margin-top:18px}
   @media(max-width:980px){ .content{grid-template-columns:1fr} .sidebar{order:2} }
 
-  .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:12px;border:1px solid rgba(255,255,255,0.03)}
+  .panel{
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:14px;padding:12px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(2,6,23,0.6)
+  }
+
+  /* results */
   .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
   .card{display:flex;gap:12px;align-items:flex-start;padding:10px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));border:1px solid rgba(255,255,255,0.02)}
-  .thumb{width:120px;height:70px;border-radius:8px;overflow:hidden}
-  .thumb img{width:100%;height:100%;object-fit:cover}
+  .thumb{width:120px;height:70px;border-radius:8px; overflow:hidden;flex-shrink:0;box-shadow:0 6px 18px rgba(0,0,0,0.6)}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .meta{flex:1}
   .title{font-weight:700;margin:0;color:#fff;font-size:14px}
   .sub{font-size:12px;color:var(--muted);margin-top:6px}
   .controls{margin-top:10px;display:flex;gap:8px;align-items:center}
@@ -39,179 +56,202 @@
   .playBtn{background:linear-gradient(90deg,#00f5ff,#7c4dff);border:0;color:#051019;padding:8px 12px;border-radius:10px;font-weight:700;cursor:pointer}
   .linkBtn{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--neon1);padding:8px 10px;border-radius:10px}
 
-  /* bottom sheet */
-  .sheet{
-    position:fixed;left:0;right:0;bottom:0;height:72px;z-index:9999;display:flex;align-items:center;padding:12px 14px;
-    gap:12px;background:linear-gradient(180deg, rgba(9,9,12,0.95), rgba(6,6,10,0.95));border-top-left-radius:12px;border-top-right-radius:12px;box-shadow:0 -12px 30px rgba(0,0,0,0.6);
-    transition:height .22s ease, transform .18s ease;
+  /* sidebar / player */
+  .sidebar .now{display:flex;gap:12px;align-items:center}
+  .now .cover{width:86px;height:86px;border-radius:10px;overflow:hidden}
+  .now .cover img{width:100%;height:100%;object-fit:cover}
+  .now .track{flex:1}
+  .now .track .t{font-weight:800;font-size:15px}
+  .now .track .a{color:var(--muted);font-size:13px;margin-top:6px}
+  .big-controls{display:flex;gap:8px;align-items:center;margin-top:12px}
+  .circle{width:44px;height:44px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(90deg,#0ff,#7c4dff);color:#051019;font-weight:800;cursor:pointer}
+  .progress{height:6px;background:rgba(255,255,255,0.03);border-radius:8px;margin-top:12px;overflow:hidden}
+  .progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#00f5ff,#7c4dff)}
+
+  footer.small{margin-top:12px;color:var(--muted);font-size:12px}
+
+  /* fallback popup */
+  #yt-fallback {
+    position: fixed;
+    left: 14px;
+    right: 14px;
+    bottom: 18px;
+    z-index: 99999;
+    display:none;
+    background: #fff;
+    color:#111;
+    border-radius:12px;
+    padding:12px;
+    box-shadow:0 12px 40px rgba(0,0,0,0.45);
+    font-family:system-ui,Segoe UI,Roboto,Inter;
   }
-  .sheet.expanded{height:66vh}
-  .handle{width:44px;height:6px;border-radius:6px;background:rgba(255,255,255,0.06);position:absolute;left:50%;transform:translateX(-50%);top:10px;cursor:grab}
-  .thumb-sm{width:56px;height:56px;border-radius:8px;overflow:hidden}
-  .meta{min-width:0;overflow:hidden}
-  .meta .title{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .meta .sub{color:var(--muted);font-size:13px;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .controls { margin-left:auto; display:flex; gap:10px; align-items:center }
-  .ctrl-btn{width:48px;height:40px;border-radius:10px;border:0;background:linear-gradient(90deg,#00f5ff,#7c4dff);color:#051019;font-weight:800;cursor:pointer}
-  .small-progress{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(255,255,255,0.03)}
-  .small-progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#00f5ff,#7c4dff)}
-
-  /* expanded content */
-  .expanded-content{display:none;padding:18px;gap:12px;flex-direction:column;height:calc(100% - 72px);overflow:auto}
-  .sheet.expanded .expanded-content{display:flex}
-  .player-big{display:flex;gap:18px;align-items:center}
-  .big-thumb{width:160px;height:160px;border-radius:10px;overflow:hidden}
-  .big-thumb img{width:100%;height:100%;object-fit:cover}
-  .big-meta .title{font-size:18px;font-weight:900}
-  .controls-row{display:flex;gap:12px;align-items:center;margin-top:12px}
-
-  /* neon glow + eq */
-  .sheet.playing{box-shadow:0 -14px 40px rgba(124,77,255,0.12)}
-  .sheet-eq{display:inline-flex;gap:4px;align-items:flex-end;margin-right:6px}
-  .sheet-eq .bar{width:4px;height:8px;background:linear-gradient(180deg,var(--neon2),var(--neon1));border-radius:2px;transform-origin:center bottom}
-  .sheet-eq.playing .bar{animation:barAnim 800ms infinite linear}
-  .sheet-eq .bar:nth-child(1){animation-delay:0ms}
-  .sheet-eq .bar:nth-child(2){animation-delay:120ms}
-  .sheet-eq .bar:nth-child(3){animation-delay:240ms}
-  .sheet-eq .bar:nth-child(4){animation-delay:360ms}
-  @keyframes barAnim{0%{transform:scaleY(0.3)}25%{transform:scaleY(1)}50%{transform:scaleY(0.45)}75%{transform:scaleY(0.8)}100%{transform:scaleY(0.3)}}
-
-  @media(max-width:520px){ .ctrl-btn{width:42px;height:38px} .big-thumb{width:120px;height:120px} .meta .title{max-width:120px} }
+  #yt-fallback .title{font-weight:700; margin-bottom:6px;font-size:16px}
+  #yt-fallback .hint{color:#555;margin-bottom:10px;font-size:13px}
+  #yt-fallback .row{display:flex;gap:8px;align-items:center}
+  .fb-btn{padding:8px 12px;border-radius:8px;border:0;cursor:pointer}
+  .fb-primary{background:linear-gradient(90deg,#00f5ff,#7c4dff);color:#051019}
+  .fb-ghost{background:transparent;border:1px solid rgba(0,0,0,0.08)}
+  .fb-close{background:transparent;border:0;color:#444}
+  /* subtle neon glow when hover */
+  .card:hover{box-shadow:0 10px 30px rgba(124,77,255,0.06)}
+  .playBtn:active,.circle:active{transform:translateY(1px)}
 </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <div class="logo">
-        <div class="mark" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2v10" stroke="#04121a" stroke-width="1.6"/><path d="M6 12l6-6 6 6" stroke="#04121a" stroke-width="1.6"/></svg></div>
-        <div><h1>NeonTube</h1><p class="lead">Dark Neon YouTube Music — full tracks</p></div>
+        <div class="mark" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2v10" stroke="#04121a" stroke-width="1.6" stroke-linecap="round"/><path d="M6 12l6-6 6 6" stroke="#04121a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <h1>NeonTube</h1>
+          <p class="lead">Dark Neon YouTube Music — full tracks</p>
+        </div>
       </div>
       <div style="margin-left:auto;color:var(--muted);font-size:13px">No backend • Single file • YouTube</div>
     </header>
 
     <div class="searchbar">
-      <input id="q" class="input" type="search" placeholder="Search songs, artists or paste a YouTube link" />
+      <input id="q" class="input" type="search" placeholder="Search songs, artists or paste a YouTube link (e.g. bad guy billie eilish)" />
       <button id="go" class="btn primary">Search</button>
       <button id="clear" class="btn">Clear</button>
     </div>
 
     <div class="content">
       <main class="panel">
-        <div id="results" class="results"></div>
+        <div id="results" class="results">
+          <!-- search results go here -->
+        </div>
       </main>
 
       <aside class="sidebar panel">
-        <div class="now"><div class="cover"><img id="nowThumb" src="" alt=""></div>
-          <div class="track"><div class="t" id="nowTitle">Nothing playing</div><div class="a" id="nowArtist">—</div></div>
+        <div class="now">
+          <div class="cover"><img id="nowThumb" src="" alt=""></div>
+          <div class="track">
+            <div class="t" id="nowTitle">Nothing playing</div>
+            <div class="a" id="nowArtist">—</div>
+          </div>
         </div>
-        <div class="big-controls"><div id="prev" class="circle">⏮</div><div id="play" class="circle">▶</div><div id="next" class="circle">⏭</div></div>
+
+        <div class="big-controls">
+          <div id="prev" class="circle">⏮</div>
+          <div id="play" class="circle">▶</div>
+          <div id="next" class="circle">⏭</div>
+        </div>
+
         <div class="progress"><i id="progressBar"></i></div>
-        <div style="margin-top:10px"><button id="openYT" class="linkBtn" style="width:100%">Open in YouTube</button></div>
-        <footer class="small">Tap Play on a result to start. Drag the bottom bar to expand/close.</footer>
+
+        <div style="margin-top:10px">
+          <button id="openYT" class="linkBtn" style="width:100%">Open in YouTube</button>
+        </div>
+
+        <footer class="small">Tip: tap a result's Play to load. Use the YouTube controls if playback blocked by browser autoplay policy.</footer>
       </aside>
     </div>
   </div>
 
-  <!-- BOTTOM SHEET -->
-  <div id="sheet" class="sheet" aria-hidden="true">
-    <div class="handle" id="sheetHandle" aria-hidden="true"></div>
-    <div class="thumb-sm"><img id="sheetThumb" src="" alt=""></div>
-    <div class="meta">
-      <div id="sheetTitle" class="title">Nothing playing</div>
-      <div id="sheetSub" class="sub">—</div>
-    </div>
+  <!-- hidden element for YT player -->
+  <div id="yt-player" style="display:none"></div>
 
-    <div class="controls">
-      <div class="sheet-eq" id="sheetEq"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
-      <button id="sheetPrev" class="ctrl-btn">⏮</button>
-      <button id="sheetPlay" class="ctrl-btn">▶</button>
-      <button id="sheetNext" class="ctrl-btn">⏭</button>
-    </div>
-
-    <div class="small-progress"><i id="sheetProgress"></i></div>
-
-    <div class="expanded-content" id="sheetExpanded">
-      <div class="player-big">
-        <div class="big-thumb"><img id="bigThumb" src="" alt=""></div>
-        <div class="big-meta">
-          <div id="bigTitle" class="title">Nothing playing</div>
-          <div id="bigSub" class="sub">—</div>
-          <div class="controls-row">
-            <button id="bigPrev" class="ctrl-btn">⏮</button>
-            <button id="bigPlay" class="ctrl-btn">▶</button>
-            <button id="bigNext" class="ctrl-btn">⏭</button>
-            <button id="bigOpen" class="ctrl-btn" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--neon1)">YouTube</button>
-          </div>
-        </div>
-      </div>
-      <div style="margin-top:12px;color:var(--muted);font-size:14px">Playlist placeholder — will list queued tracks here.</div>
+  <!-- fallback popup -->
+  <div id="yt-fallback" role="alert" aria-live="assertive">
+    <div class="title">Playback blocked — embed not allowed</div>
+    <div class="hint">Video ini tidak dapat diputar di halaman ini. Buka YouTube atau coba lagu lain.</div>
+    <div class="row">
+      <button id="fb-open" class="fb-btn fb-primary">Open in YouTube</button>
+      <button id="fb-next" class="fb-btn fb-ghost">Try next</button>
+      <button id="fb-close" class="fb-btn fb-close">Close</button>
     </div>
   </div>
 
-  <!-- hidden YT player container required by API -->
-  <div id="yt-player" style="display:none"></div>
-
-  <!-- load YouTube IFrame API -->
+  <!-- YouTube IFrame API -->
   <script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
-/* ====== CONFIG ====== */
-const API_KEY = "AIzaSyBle-EJDQ_3HzYcPwQRodGjKx3Lq4Ep0b8"; // <-- GANTI kalau mau search berfungsi
-/* ==================== */
+/* ========== CONFIG ========== */
+/* GANTI API_KEY DI BAWAH dengan YouTube Data API v3 key lo (opsional, pake kalo mau search) */
+const API_KEY = "AIzaSyBle-EJDQ_3HzYcPwQRodGjKx3Lq4Ep0b8";
+/* ============================ */
 
 const $ = id => document.getElementById(id);
-const resultsEl = $("results"), qEl = $("q"), goBtn = $("go"), clearBtn = $("clear");
-const sheet = $("sheet"), sheetHandle = $("sheetHandle"), sheetThumb = $("sheetThumb"), sheetTitle = $("sheetTitle"), sheetSub = $("sheetSub"), sheetPlay = $("sheetPlay"), sheetPrev = $("sheetPrev"), sheetNext = $("sheetNext"), sheetProgress = $("sheetProgress"), sheetExpanded = $("sheetExpanded"), sheetEq = $("sheetEq");
-const bigThumb = $("bigThumb"), bigTitle = $("bigTitle"), bigSub = $("bigSub"), bigPlay = $("bigPlay"), bigPrev = $("bigPrev"), bigNext = $("bigNext"), bigOpen = $("bigOpen");
-const playBtn = $("play"), prevBtn = $("prev"), nextBtn = $("next"), nowThumb = $("nowThumb"), nowTitle = $("nowTitle"), nowArtist = $("nowArtist"), openYT = $("openYT"), progressBar = $("progressBar");
+const resultsEl = $("results");
+const qEl = $("q");
+const goBtn = $("go");
+const clearBtn = $("clear");
+const playBtn = $("play");
+const prevBtn = $("prev");
+const nextBtn = $("next");
+const nowThumb = $("nowThumb");
+const nowTitle = $("nowTitle");
+const nowArtist = $("nowArtist");
+const openYT = $("openYT");
+const progressBar = $("progressBar");
 
-let ytPlayer = null;
-let playlist = [];
+const fbEl = $("yt-fallback");
+const fbOpen = $("fb-open");
+const fbNext = $("fb-next");
+const fbClose = $("fb-close");
+
+let playlist = []; // {id,title,channel,thumb}
 let currentIndex = -1;
-let isPlaying = false;
-let progressTimer = null;
+let ytPlayer = null;
+let progressInterval = null;
+let playerReady = false;
 
-/* YT Data helpers (search) */
+/* ===== YouTube Data helpers ===== */
 async function ytSearch(q){
-  if (!API_KEY || API_KEY === "REPLACE_WITH_YOUR_KEY") throw new Error("Missing API_KEY for search");
   const url = new URL("https://www.googleapis.com/youtube/v3/search");
-  url.search = new URLSearchParams({ key: API_KEY, q, part: "snippet", maxResults: 12, type: "video" });
+  url.search = new URLSearchParams({
+    key: API_KEY,
+    q,
+    part: "snippet",
+    maxResults: 12,
+    type: "video"
+  });
   const r = await fetch(url);
-  if (!r.ok) throw new Error("YouTube API error: " + r.status);
+  if (!r.ok) throw new Error("YouTube API error: "+r.status);
   const j = await r.json();
   return j.items || [];
 }
-async function videoDetailsById(id){
-  if (!API_KEY || API_KEY === "REPLACE_WITH_YOUR_KEY") {
-    return { id, snippet:{ title:id, thumbnails:{default:{url:''}}, channelTitle:'' } };
-  }
+
+async function videoDetailsSingle(id){
   const url = new URL("https://www.googleapis.com/youtube/v3/videos");
-  url.search = new URLSearchParams({ key: API_KEY, id, part: "snippet,contentDetails" });
+  url.search = new URLSearchParams({
+    key: API_KEY,
+    id,
+    part: "snippet,contentDetails"
+  });
   const r = await fetch(url);
   if (!r.ok) throw new Error("Video details error: "+r.status);
   const j = await r.json();
-  if (!j.items || !j.items.length) return null;
-  return { id: j.items[0].id, snippet: j.items[0].snippet };
+  return (j.items && j.items[0]) || null;
 }
+
 function extractId(s){
   try{
     const u = new URL(s);
     if (u.hostname.includes("youtu.be")) return u.pathname.slice(1);
     if (u.searchParams.get("v")) return u.searchParams.get("v");
     return null;
-  }catch(e){ return null; }
+  }catch(e){
+    return null;
+  }
 }
 
-/* render functions */
+/* ===== render results ===== */
 function renderItems(items){
   resultsEl.innerHTML = "";
-  if (!items || items.length === 0) { resultsEl.innerHTML = `<div style="padding:18px;color:var(--muted)">No results</div>`; return; }
+  if (!items || items.length === 0){
+    resultsEl.innerHTML = `<div style="padding:18px;color:var(--muted)">No results</div>`;
+    return;
+  }
   items.forEach(it=>{
     const vid = it.id?.videoId || it.id;
     const snip = it.snippet || it;
     const thumb = (snip.thumbnails && (snip.thumbnails.mqdefault?.url || snip.thumbnails.default?.url)) || "";
-    const title = snip.title || "Untitled";
-    const channel = snip.channelTitle || "";
+    const title = snip.title || (it.title || "Untitled");
+    const channel = snip.channelTitle || (it.channelTitle||"");
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
@@ -220,62 +260,87 @@ function renderItems(items){
         <div class="title">${escapeHtml(title)}</div>
         <div class="sub">${escapeHtml(channel)}</div>
         <div class="controls">
-          <button class="playBtn" data-id="${vid}" data-thumb="${thumb}" data-title="${escapeHtml(title)}" data-channel="${escapeHtml(channel)}">Play</button>
+          <button class="playBtn playBtnNeon" data-id="${vid}" data-thumb="${thumb}" data-title="${escapeHtml(title)}" data-channel="${escapeHtml(channel)}">Play</button>
           <a class="linkBtn" target="_blank" rel="noopener noreferrer" href="https://www.youtube.com/watch?v=${vid}">YouTube</a>
         </div>
-      </div>`;
+      </div>
+    `;
     resultsEl.appendChild(card);
   });
   attachPlayHandlers();
 }
+
+/* attach handlers */
 function attachPlayHandlers(){
   document.querySelectorAll(".playBtn").forEach(btn=>{
-    btn.onclick = async () => {
-      const id = btn.dataset.id, thumb = btn.dataset.thumb, title = btn.dataset.title, channel = btn.dataset.channel;
-      // enqueue or start
+    btn.onclick = () => {
+      const id = btn.dataset.id;
+      const thumb = btn.dataset.thumb;
+      const title = btn.dataset.title;
+      const channel = btn.dataset.channel;
       if (currentIndex === -1){
         playlist = [{id,title,channel,thumb}];
         currentIndex = 0;
       } else {
         playlist.splice(currentIndex+1,0,{id,title,channel,thumb});
-        currentIndex++;
+        currentIndex = currentIndex+1;
       }
-      await loadAtIndex(currentIndex);
-      // user gesture -> start playback allowed
-      playTrack();
+      loadAtIndex(currentIndex);
+      playVideo();
     };
   });
 }
+
+/* escape */
 function escapeHtml(s){ return String(s||"").replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
-/* --- YT IFrame API: create player --- */
+/* ===== YouTube IFrame player integration ===== */
+/* onYouTubeIframeAPIReady must be global for YT API to call it */
 function onYouTubeIframeAPIReady(){
-  // create invisible placeholder player; we will load videoId dynamically
+  // attach to the hidden container with id 'yt-player'
   ytPlayer = new YT.Player('yt-player', {
-    height: '0', width: '0', videoId: '',
-    playerVars: {playsinline:1, rel:0, modestbranding:1},
-    events: { onStateChange: onPlayerStateChange, onError: onPlayerError, onReady: ()=>{} }
+    height: "0",
+    width: "0",
+    videoId: "",
+    playerVars: {playsinline: 1, rel: 0, modestbranding: 1},
+    events: { onReady: onPlayerReady, onStateChange: onStateChange, onError: onPlayerError }
   });
-}
-function onPlayerStateChange(e){
-  const st = e.data;
-  if (st === YT.PlayerState.PLAYING){
-    isPlaying = true; updatePlayUI(true); startProgressRealtime();
-  } else if (st === YT.PlayerState.PAUSED){
-    isPlaying = false; updatePlayUI(false); stopProgressRealtime();
-  } else if (st === YT.PlayerState.ENDED){
-    isPlaying = false; updatePlayUI(false); stopProgressRealtime(); // auto next
-    setTimeout(()=> nextTrack(), 300);
-  }
-}
-function onPlayerError(e){
-  console.warn("YT player error", e);
-  alert("Playback error — try another track.");
-  nextTrack();
+  // expose on window too (compat)
+  window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
 }
 
-/* load and UI binding */
-async function loadAtIndex(i){
+function onPlayerReady(){
+  playerReady = true;
+  // if playlist has something loaded already, ensure it's in player
+  if (currentIndex >= 0 && playlist[currentIndex]) {
+    try { ytPlayer.cueVideoById(playlist[currentIndex].id); } catch(e){}
+  }
+}
+
+function onStateChange(e){
+  const st = e.data;
+  if (st === YT.PlayerState.ENDED){
+    nextTrack();
+  } else if (st === YT.PlayerState.PLAYING){
+    playBtn.textContent = "⏸";
+    startProgress();
+  } else if (st === YT.PlayerState.PAUSED){
+    playBtn.textContent = "▶";
+    stopProgress();
+  } else {
+    // buffering or unstarted
+  }
+}
+
+function onPlayerError(e){
+  console.warn('YT Player error', e);
+  // show fallback popup with the current video id
+  const vid = (playlist[currentIndex] && playlist[currentIndex].id) || '';
+  showFallbackFor(vid);
+}
+
+/* load & control playlist */
+function loadAtIndex(i){
   if (!playlist[i]) return;
   const it = playlist[i];
   nowThumb.src = it.thumb || "";
@@ -283,82 +348,62 @@ async function loadAtIndex(i){
   nowArtist.textContent = it.channel || "";
   openYT.onclick = ()=> window.open(`https://www.youtube.com/watch?v=${it.id}`, '_blank');
 
-  sheetThumb.src = it.thumb || "";
-  sheetTitle.textContent = it.title || "Untitled";
-  sheetSub.textContent = it.channel || "";
-  bigThumb.src = it.thumb || "";
-  bigTitle.textContent = it.title || "Untitled";
-  bigSub.textContent = it.channel || "";
-  bigOpen.onclick = ()=> window.open(`https://www.youtube.com/watch?v=${it.id}`, '_blank');
-
-  // load to player but don't autoplay yet (autoplay via explicit playTrack)
-  if (ytPlayer && typeof ytPlayer.loadVideoById === "function"){
-    ytPlayer.loadVideoById({videoId: it.id, startSeconds: 0});
+  // load into player
+  if (ytPlayer && playerReady && typeof ytPlayer.loadVideoById === "function"){
+    try{
+      ytPlayer.loadVideoById(it.id);
+    }catch(e){
+      // fallback to cue
+      try { ytPlayer.cueVideoById(it.id); } catch(err){}
+    }
   } else {
-    // fallback: set iframe src directly (shouldn't usually happen)
-    const f = document.createElement('iframe');
-    f.style.display='none';
-    f.allow='autoplay';
-    f.src = `https://www.youtube.com/embed/${it.id}?rel=0&playsinline=1`;
-    document.body.appendChild(f);
+    // player not ready yet, cue when ready
+    // attempt later
+    setTimeout(()=>{ if (ytPlayer && typeof ytPlayer.cueVideoById === 'function') ytPlayer.cueVideoById(it.id); },400);
   }
-  // show sheet (collapsed)
-  showSheet(true);
 }
 
-/* playback controls using YT API */
-function playTrack(){
-  if (!ytPlayer) return alert("Player not ready");
-  if (currentIndex === -1) return alert("No track loaded");
-  const state = ytPlayer.getPlayerState();
-  // if paused or cued, play
-  if (state !== YT.PlayerState.PLAYING) ytPlayer.playVideo();
+/* playback controls */
+function playVideo(){
+  if (!ytPlayer || !playerReady) return alert("Player not ready");
+  const state = ytPlayer.getPlayerState ? ytPlayer.getPlayerState() : -1;
+  if (state === YT.PlayerState.PLAYING) ytPlayer.pauseVideo();
+  else ytPlayer.playVideo();
 }
-function pauseTrack(){
-  if (!ytPlayer) return;
-  ytPlayer.pauseVideo();
-}
-function togglePlay(){ if (isPlaying) pauseTrack(); else playTrack(); }
 function nextTrack(){
   if (currentIndex < playlist.length - 1){
-    currentIndex++; loadAtIndex(currentIndex); // load -> will auto start if user previously played once
-    // ensure play after short delay
-    setTimeout(()=> { try{ ytPlayer.playVideo(); }catch(e){} }, 500);
+    currentIndex++;
+    loadAtIndex(currentIndex);
+    playVideo();
   } else {
-    // nothing next
-    pauseTrack();
+    // no next track -> stop
+    try{ ytPlayer.stopVideo(); } catch(e){}
   }
 }
 function prevTrack(){
-  if (currentIndex > 0){ currentIndex--; loadAtIndex(currentIndex); setTimeout(()=> { try{ ytPlayer.playVideo(); }catch(e){} }, 500); }
-  else { // restart
-    try{ ytPlayer.seekTo(0); }catch(e){}
-  }
-}
-function updatePlayUI(state){
-  const sym = state ? "⏸" : "▶";
-  playBtn && (playBtn.textContent = state ? "⏸" : "▶");
-  sheetPlay && (sheetPlay.textContent = sym);
-  bigPlay && (bigPlay.textContent = sym);
-  if (state){ sheet.classList.add('playing'); sheetEq.classList.add('playing'); } else { sheet.classList.remove('playing'); sheetEq.classList.remove('playing'); }
+  if (!ytPlayer) return;
+  // if playing more than 3s, restart; otherwise go prev
+  try{
+    const pos = ytPlayer.getCurrentTime();
+    if (pos > 3) { ytPlayer.seekTo(0); } else if (currentIndex > 0) { currentIndex--; loadAtIndex(currentIndex); playVideo(); }
+  }catch(e){}
 }
 
-/* progress: realtime via API (best) */
-function startProgressRealtime(){
-  stopProgressRealtime();
-  progressTimer = setInterval(()=>{
+/* progress bar */
+function startProgress(){
+  stopProgress();
+  progressInterval = setInterval(()=>{
     try{
       const dur = ytPlayer.getDuration();
-      const cur = ytPlayer.getCurrentTime();
-      if (dur && dur>0){
-        const pct = Math.max(0, Math.min(100, (cur/dur)*100));
-        sheetProgress.style.width = pct + "%";
+      const pos = ytPlayer.getCurrentTime();
+      if (dur && !isNaN(dur) && dur>0){
+        const pct = Math.max(0,Math.min(100,(pos/dur)*100));
         progressBar.style.width = pct + "%";
       }
     }catch(e){}
-  },500);
+  },300);
 }
-function stopProgressRealtime(){ if (progressTimer) clearInterval(progressTimer); }
+function stopProgress(){ if (progressInterval) clearInterval(progressInterval); }
 
 /* UI hooks */
 goBtn.onclick = async ()=>{
@@ -367,12 +412,17 @@ goBtn.onclick = async ()=>{
   try{
     const id = extractId(q);
     if (id){
-      const det = await videoDetailsById(id);
+      const det = API_KEY ? await videoDetailsSingle(id) : null;
       if (det) renderItems([det]);
+      else renderItems([{ id, snippet: { title: id, thumbnails: { default: { url: '' } }, channelTitle: '' } }]);
       return;
     }
     resultsEl.innerHTML = `<div style="padding:18px;color:var(--muted)">Searching…</div>`;
-    const items = await ytSearch(q);
+    const items = API_KEY ? await ytSearch(q) : [];
+    if (!items.length && !API_KEY) {
+      resultsEl.innerHTML = `<div style="padding:18px;color:var(--muted)">You didn't set an API key — search disabled.</div>`;
+      return;
+    }
     renderItems(items);
   }catch(err){
     console.error(err);
@@ -381,59 +431,34 @@ goBtn.onclick = async ()=>{
 };
 clearBtn.onclick = ()=>{ qEl.value=''; resultsEl.innerHTML=''; };
 
-sheetPlay.onclick = ()=> togglePlay();
-sheetPrev.onclick = ()=> prevTrack();
-sheetNext.onclick = ()=> nextTrack();
-bigPlay.onclick = ()=> togglePlay();
-bigPrev.onclick = ()=> prevTrack();
-bigNext.onclick = ()=> nextTrack();
-playBtn && (playBtn.onclick = ()=> togglePlay());
-prevBtn && (prevBtn.onclick = ()=> prevTrack());
-nextBtn && (nextBtn.onclick = ()=> nextTrack());
+playBtn.onclick = ()=>playVideo();
+prevBtn.onclick = ()=>prevTrack();
+nextBtn.onclick = ()=>nextTrack();
+qEl.addEventListener("keydown", (e)=>{ if (e.key==='Enter') goBtn.click(); });
 
-/* sheet drag with snap */
-(function(){
+/* ========== fallback popup functions ========== */
+function showFallbackFor(videoId){
+  fbOpen.onclick = ()=> window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+  fbNext.onclick = ()=> { fbEl.style.display = 'none'; nextTrack(); };
+  fbClose.onclick = ()=> { fbEl.style.display = 'none'; };
+  fbEl.style.display = 'block';
+}
 
-  const handle = sheetHandle;
-  let dragging=false, startY=0, startHeight=72, maxH = Math.max(window.innerHeight * 0.86, 360);
-
-  handle.addEventListener('pointerdown',(e)=>{
-    dragging = true; startY = e.clientY; startHeight = sheet.classList.contains('expanded') ? maxH : 72;
-    handle.setPointerCapture(e.pointerId);
-    document.body.style.userSelect = 'none';
-  });
-  window.addEventListener('pointermove',(e)=>{
-    if (!dragging) return;
-    const dy = startY - e.clientY; // positive when dragging up
-    let newH = Math.min(maxH, Math.max(72, startHeight + dy));
-    sheet.style.height = newH + 'px';
-    const pct = (newH - 72) / (maxH - 72);
-    if (pct > 0.45) sheet.classList.add('expanded'); else sheet.classList.remove('expanded');
-  });
-  window.addEventListener('pointerup',(e)=>{
-    if (!dragging) return;
-    dragging = false; document.body.style.userSelect = '';
-    if (sheet.classList.contains('expanded')) { sheet.style.height = '66vh'; } else { sheet.style.height = '72px'; }
-  });
-
-  // tap on collapsed sheet toggles expansion
-  sheet.addEventListener('click',(e)=>{
-    const targets = [sheetPlay, sheetPrev, sheetNext, bigPlay, bigPrev, bigNext, bigOpen];
-    if (targets.includes(e.target)) return;
-    // toggle (but avoid if click on expanded content)
-    if (sheet.classList.contains('expanded')) { sheet.classList.remove('expanded'); sheet.style.height='72px'; }
-    else { sheet.classList.add('expanded'); sheet.style.height='66vh'; }
-  });
-
+/* create player container if missing (safety) */
+(function ensurePlayerEl(){
+  if (!document.getElementById('yt-player')){
+    const div = document.createElement('div');
+    div.id = 'yt-player';
+    div.style.display = 'none';
+    document.body.appendChild(div);
+  }
 })();
 
-/* helper escape */
-function escapeHtml(s){ return String(s||"").replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
-
-/* respond to window resize so maxH updates in next drag */
-window.addEventListener('resize', ()=>{ /* nothing special needed; drag reads window.innerHeight next time */ });
-
-/* optional: preload YT player early by creating it (API will call onYouTubeIframeAPIReady) */
+/* expose some functions globally for debug, if needed */
+window.nextTrack = nextTrack;
+window.prevTrack = prevTrack;
+window.playVideo = playVideo;
+window.showFallbackFor = showFallbackFor;
 
 </script>
 </body>
