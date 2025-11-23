@@ -63,11 +63,13 @@
     position:fixed;right:14px;bottom:14px;z-index:99999;
     background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
     border:1px solid rgba(255,255,255,0.06);backdrop-filter:blur(6px);
-    padding:8px 10px;border-radius:14px;display:flex;gap:10px;align-items:center;min-width:220px;box-shadow:0 10px 40px rgba(0,0,0,0.6);
+    padding:8px 10px;border-radius:14px;display:flex;gap:10px;align-items:center;min-width:260px;box-shadow:0 10px 40px rgba(0,0,0,0.6);
+    transition:transform .18s ease, box-shadow .18s ease;
   }
+  .mini-player.dragging{opacity:0.95; transform:scale(1.01); box-shadow:0 18px 60px rgba(0,0,0,0.7)}
   .mini-thumb{width:56px;height:40px;border-radius:6px;overflow:hidden;flex-shrink:0}
   .mini-thumb img{width:100%;height:100%;object-fit:cover}
-  .mini-meta{flex:1;min-width:80px}
+  .mini-meta{flex:1;min-width:100px}
   .mini-title{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .mini-sub{font-size:12px;color:var(--muted);margin-top:4px}
   .mini-controls{display:flex;gap:8px;align-items:center}
@@ -75,6 +77,40 @@
   .mini-close{background:transparent;border:0;color:var(--muted);font-weight:800;cursor:pointer;padding:6px;border-radius:6px}
   .mini-player.hidden{display:none}
   @media(max-width:520px){ .mini-player{right:10px;bottom:10px;min-width:200px} .mini-title{max-width:100px} }
+
+  /* neon glow outline animation */
+  .mini-player::before{
+    content:'';
+    position:absolute;inset:0;border-radius:14px;padding:2px;
+    background:linear-gradient(90deg, rgba(0,245,255,0.12), rgba(124,77,255,0.12));
+    filter:blur(14px);
+    opacity:0;
+    transition:opacity .25s;
+    pointer-events:none;
+  }
+  .mini-player.playing::before{ opacity:1; animation:neonPulse 2.2s infinite linear; }
+
+  @keyframes neonPulse{
+    0%{ filter:blur(6px) drop-shadow(0 0 6px rgba(0,245,255,0.2)); transform:scale(1); }
+    50%{ filter:blur(20px) drop-shadow(0 0 20px rgba(124,77,255,0.2)); transform:scale(1.02); }
+    100%{ filter:blur(6px) drop-shadow(0 0 6px rgba(0,245,255,0.2)); transform:scale(1); }
+  }
+
+  /* simple equalizer */
+  .mini-eq{display:inline-flex;gap:4px;align-items:flex-end;margin-right:6px}
+  .mini-eq .bar{width:4px;height:8px;background:linear-gradient(180deg,var(--neon2),var(--neon1));border-radius:2px;opacity:0.9;transform-origin:center bottom}
+  .mini-eq.playing .bar{animation:barAnim 800ms infinite linear}
+  .mini-eq .bar:nth-child(1){animation-delay:0ms}
+  .mini-eq .bar:nth-child(2){animation-delay:120ms}
+  .mini-eq .bar:nth-child(3){animation-delay:240ms}
+  .mini-eq .bar:nth-child(4){animation-delay:360ms}
+  @keyframes barAnim{
+    0%{ transform:scaleY(0.3) }
+    25%{ transform:scaleY(1.0) }
+    50%{ transform:scaleY(0.45) }
+    75%{ transform:scaleY(0.8) }
+    100%{ transform:scaleY(0.3) }
+  }
 </style>
 </head>
 <body>
@@ -130,21 +166,27 @@
   </div>
 
   <!-- MINI POPUP ELEMENT -->
-  <div id="mini" class="mini-player hidden" role="dialog" aria-label="mini player">
+  <div id="mini" class="mini-player hidden" role="dialog" aria-label="mini player" title="Drag to move">
+    <div class="mini-eq" id="miniEq" aria-hidden="true">
+      <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    </div>
+
     <div class="mini-thumb"><img id="miniThumb" src="" alt=""></div>
     <div class="mini-meta">
       <div id="miniTitle" class="mini-title">Nothing playing</div>
       <div id="miniSub" class="mini-sub">—</div>
     </div>
     <div class="mini-controls">
-      <button id="miniPlay" class="mini-btn">▶</button>
+      <button id="miniPrev" class="mini-btn" title="Previous">⏮</button>
+      <button id="miniPlay" class="mini-btn" title="Play/Pause">▶</button>
+      <button id="miniNext" class="mini-btn" title="Next">⏭</button>
       <button id="miniClose" class="mini-close" title="Close">✕</button>
     </div>
   </div>
 
 <script>
 /* ====== CONFIG ====== */
-/* GANTI INI dengan API Key YouTube Data v3 kamu */
+/* GANTI INI dengan API Key YouTube Data v3 kamu (opsional) */
 const API_KEY = "AIzaSyBle-EJDQ_3HzYcPwQRodGjKx3Lq4Ep0b8";
 /* ==================== */
 
@@ -168,6 +210,9 @@ const miniTitle = $("miniTitle");
 const miniSub = $("miniSub");
 const miniPlay = $("miniPlay");
 const miniClose = $("miniClose");
+const miniPrev = $("miniPrev");
+const miniNext = $("miniNext");
+const miniEq = $("miniEq");
 
 let playlist = [];
 let currentIndex = -1;
@@ -275,7 +320,6 @@ function setIframeSrcForVideo(vid, autoplay){
   const src = `${base}${vid}?autoplay=${autoplay?1:0}&rel=0&playsinline=1&enablejsapi=1&origin=${origin}`;
   iframeEl.src = src;
   iframeEl.style.display = autoplay ? "block" : "none";
-  // if playing show visible small player
   if (autoplay) {
     iframeEl.style.width = "320px";
     iframeEl.style.height = "180px";
@@ -316,13 +360,14 @@ function loadAtIndex(i){
 function playTrack(){
   if (currentIndex === -1 || !playlist[currentIndex]) return alert("No track loaded");
   setIframeSrcForVideo(playlist[currentIndex].id, true);
-  // send play command after short delay to ensure iframe initialized
   setTimeout(()=>postCommand("playVideo"), 600);
   playing = true;
   playBtn.textContent = "⏸";
   miniPlay.textContent = "⏸";
   showMini(true);
   startProgress();
+  mini.classList.add("playing");
+  miniEq.classList.add("playing");
 }
 function pauseTrack(){
   postCommand("pauseVideo");
@@ -330,6 +375,8 @@ function pauseTrack(){
   playBtn.textContent = "▶";
   miniPlay.textContent = "▶";
   stopProgress();
+  mini.classList.remove("playing");
+  miniEq.classList.remove("playing");
 }
 function togglePlay(){
   if (!playing) playTrack(); else pauseTrack();
@@ -340,13 +387,22 @@ function nextTrack(){
     loadAtIndex(currentIndex);
     setTimeout(()=>postCommand("playVideo"),600);
     playing=true; playBtn.textContent="⏸"; miniPlay.textContent="⏸"; startProgress();
+    mini.classList.add("playing"); miniEq.classList.add("playing");
   } else {
     playing=false; playBtn.textContent="▶"; miniPlay.textContent="▶"; stopProgress();
+    mini.classList.remove("playing"); miniEq.classList.remove("playing");
   }
 }
 function prevTrack(){
-  if (currentIndex > 0){ currentIndex--; loadAtIndex(currentIndex); setTimeout(()=>postCommand("playVideo"),600); playing=true; playBtn.textContent="⏸"; miniPlay.textContent="⏸"; startProgress(); }
-  else { postCommand("seekTo", [0]); }
+  if (currentIndex > 0){
+    currentIndex--;
+    loadAtIndex(currentIndex);
+    setTimeout(()=>postCommand("playVideo"),600);
+    playing=true; playBtn.textContent="⏸"; miniPlay.textContent="⏸"; startProgress();
+    mini.classList.add("playing"); miniEq.classList.add("playing");
+  } else {
+    postCommand("seekTo", [0]);
+  }
 }
 
 /* progress: approximate visual */
@@ -355,10 +411,13 @@ function stopProgress(){ if (progressInterval) clearInterval(progressInterval); 
 
 /* MINI UI */
 function showMini(v = true){ if (v) mini.classList.remove("hidden"); else mini.classList.add("hidden"); }
-miniPlay.onclick = ()=>{ if (playing) pauseTrack(); else togglePlay(); };
-miniClose.onclick = ()=>{ showMini(false); /* keep iframe running but hidden */ if (iframeEl) iframeEl.style.display='none'; } 
+miniPlay.onclick = (e)=>{ e.stopPropagation(); if (playing) pauseTrack(); else togglePlay(); };
+miniClose.onclick = (e)=>{ e.stopPropagation(); showMini(false); if (iframeEl) iframeEl.style.display='none'; };
+miniPrev.onclick = (e)=>{ e.stopPropagation(); prevTrack(); };
+miniNext.onclick = (e)=>{ e.stopPropagation(); nextTrack(); };
+
 // clicking mini opens main sidebar (scroll to top)
-mini.addEventListener("click", (e)=>{ if (e.target !== miniPlay && e.target !== miniClose){ window.scrollTo({top:0,behavior:'smooth'}); } });
+mini.addEventListener("click", (e)=>{ if (e.target !== miniPlay && e.target !== miniClose && e.target !== miniPrev && e.target !== miniNext){ window.scrollTo({top:0,behavior:'smooth'}); } });
 
 /* UI hooks */
 goBtn.onclick = async ()=>{
@@ -367,12 +426,17 @@ goBtn.onclick = async ()=>{
   try{
     const id = extractId(q);
     if (id){
-      const det = await videoDetailsById(id);
+      const det = API_KEY ? await videoDetailsById(id) : null;
       if (det) renderItems([det]);
+      else renderItems([{ id, snippet: { title: id, thumbnails: { default: { url: '' } }, channelTitle: '' } }]);
       return;
     }
     resultsEl.innerHTML = `<div style="padding:18px;color:var(--muted)">Searching…</div>`;
-    const items = await ytSearch(q);
+    const items = API_KEY ? await ytSearch(q) : [];
+    if (!items.length && !API_KEY) {
+      resultsEl.innerHTML = `<div style="padding:18px;color:var(--muted)">You didn't set an API key — search disabled.</div>`;
+      return;
+    }
     renderItems(items);
   }catch(err){
     console.error(err);
@@ -388,6 +452,58 @@ qEl.addEventListener("keydown", (e)=>{ if (e.key==='Enter') goBtn.click(); });
 
 /* message listener (optional) */
 window.addEventListener("message",(ev)=>{ /* could parse player state messages here if needed */ }, false);
+
+/* DRAG: allow moving mini around (pointer events) */
+(function enableMiniDrag(){
+  let dragging = false, startX = 0, startY = 0, startLeft = 0, startTop = 0;
+  // ensure mini has explicit left/top when user drags (defaults: right/bottom)
+  mini.addEventListener('pointerdown', (e)=>{
+    // don't start drag on control buttons
+    if (e.target === miniPlay || e.target === miniClose || e.target === miniPrev || e.target === miniNext) return;
+    dragging = true;
+    mini.setPointerCapture(e.pointerId);
+    mini.classList.add('dragging');
+    startX = e.clientX;
+    startY = e.clientY;
+    // compute current position
+    const rect = mini.getBoundingClientRect();
+    startLeft = rect.left;
+    startTop = rect.top;
+    // switch to left/top positioning so we can move freely
+    mini.style.right = 'auto';
+    mini.style.bottom = 'auto';
+    mini.style.left = startLeft + 'px';
+    mini.style.top = startTop + 'px';
+  });
+
+  window.addEventListener('pointermove', (e)=>{
+    if (!dragging) return;
+    e.preventDefault();
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    let nx = startLeft + dx;
+    let ny = startTop + dy;
+    // clamp to viewport
+    const pad = 8;
+    const w = mini.offsetWidth;
+    const h = mini.offsetHeight;
+    const maxX = window.innerWidth - w - pad;
+    const maxY = window.innerHeight - h - pad;
+    if (nx < pad) nx = pad;
+    if (ny < pad) ny = pad;
+    if (nx > maxX) nx = maxX;
+    if (ny > maxY) ny = maxY;
+    mini.style.left = nx + 'px';
+    mini.style.top = ny + 'px';
+  });
+
+  window.addEventListener('pointerup', (e)=>{
+    if (!dragging) return;
+    dragging = false;
+    mini.releasePointerCapture && mini.releasePointerCapture(e.pointerId);
+    mini.classList.remove('dragging');
+  });
+})();
 
 /* initial demo (optional) */
 // qEl.value = "lofi hip hop live";
