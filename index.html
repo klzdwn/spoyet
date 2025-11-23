@@ -3,42 +3,221 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Music Preview — Free & Legal</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Spotify Preview — Simple</title>
+  <style>
+    :root{
+      --bg:#f7fbff; --card:#ffffff; --muted:#667085; --accent:#0b84ff;
+    }
+    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+    body{background:linear-gradient(180deg,#f0f7ff 0%,var(--bg) 100%);color:#0b1b2b;padding:18px;}
+    .wrap{max-width:900px;margin:14px auto;}
+    h1{margin:0 0 8px;font-size:26px;}
+    p.hint{margin:0 0 18px;color:var(--muted);}
+    .row{display:flex;gap:8px;align-items:center;margin-bottom:12px;}
+    input.search{flex:1;padding:12px;border-radius:10px;border:1px solid #e6eef9;background:white;box-shadow:inset 0 1px 0 rgba(12,34,56,0.02);font-size:16px;}
+    button.btn{padding:10px 14px;border-radius:10px;border:0;background:var(--accent);color:white;font-weight:600;cursor:pointer;}
+    button.ghost{background:transparent;border:1px solid #dbeafe;color:var(--accent);}
+    .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:12px;}
+    .card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(12,34,56,0.06);display:flex;gap:10px;align-items:center;}
+    .cover{width:64px;height:64px;background:#eee;border-radius:6px;flex:0 0 64px;object-fit:cover;}
+    .meta{flex:1;}
+    .title{font-weight:700;margin:0 0 6px;font-size:15px;}
+    .sub{margin:0;color:var(--muted);font-size:13px;}
+    .controls{display:flex;gap:8px;align-items:center;margin-left:8px;}
+    .audio-btn{background:#0b84ff;color:white;border-radius:999px;padding:8px 12px;border:0;cursor:pointer;font-weight:600;}
+    small.note{display:block;margin-top:18px;color:var(--muted);}
+    .nores{padding:22px;border-radius:10px;background:#fff;text-align:center;color:var(--muted);box-shadow:0 6px 18px rgba(12,34,56,0.02);}
+    a.link{color:var(--accent);text-decoration:none;border:1px dashed transparent;padding:6px;border-radius:8px;font-size:13px;}
+    footer{margin-top:22px;color:var(--muted);font-size:13px}
+  </style>
 </head>
 <body>
-  <div class="app">
-    <header class="header">
-      <div>
-        <h1>Music Preview</h1>
-        <p class="sub">Preview 30s dari Spotify (legal) • YouTube fallback untuk versi penuh</p>
-      </div>
-      <div class="header-right">
-        <button id="darkToggle" class="btn small">Dark</button>
-      </div>
-    </header>
+  <div class="wrap">
+    <h1>Music Preview</h1>
+    <p class="hint">Preview 30s dari Spotify (legal). Isi <code>BASE_URL</code> di bawah jika backend kamu bukan <code>http://localhost:3000</code>.</p>
 
-    <section class="searchbar">
-      <input id="q" placeholder="Cari lagu atau artis... (contoh: imagine dragons)" />
+    <div class="row">
+      <input id="q" class="search" placeholder="Cari artis, judul, album..." />
       <button id="searchBtn" class="btn">Search</button>
-    </section>
+      <button id="darkBtn" class="ghost">Dark</button>
+    </div>
 
-    <div id="notice" class="notice">Tidak terhubung ke backend — menggunakan mock data. Set <code>BASE_URL</code> di <code>app.js</code> untuk live Spotify preview.</div>
+    <div id="info" class="nores">Masukkan kata kunci lalu tekan Search.</div>
+    <div id="results" class="list" style="display:none"></div>
 
-    <section id="controls" class="controls">
-      <button id="showFav" class="btn small">Favorites</button>
-      <button id="showAll" class="btn small">All</button>
-    </section>
-
-    <main id="grid" class="grid"></main>
-
-    <audio id="player"></audio>
-
-    <footer class="footer">
-      <small>Legal: Tidak ada bypass Spotify Premium. Preview 30s dapat diputar tanpa akun Premium jika tersedia; beberapa track tidak punya preview.</small>
-    </footer>
+    <small class="note">Catatan: preview cuma 30 detik jika tersedia di Spotify. Jika preview tidak ada, track tidak bisa diputar.</small>
+    <footer>Backend: <span id="backendInfo">localhost:3000</span></footer>
   </div>
 
-  <script src="app.js"></script>
+  <script>
+    // CONFIG:
+    // jika backend kamu di ngrok atau localtunnel, ubah BASE_URL ke URL publik (contoh "https://xxxxx.ngrok.io")
+    const BASE_URL = (() => {
+      // default: localhost
+      return (window.__BASE_URL__ || "http://127.0.0.1:3000").replace(/\/$/, "");
+    })();
+
+    document.getElementById('backendInfo').textContent = BASE_URL;
+
+    const qInput = document.getElementById('q');
+    const searchBtn = document.getElementById('searchBtn');
+    const resultsEl = document.getElementById('results');
+    const infoEl = document.getElementById('info');
+    const darkBtn = document.getElementById('darkBtn');
+
+    let currentAudio = null;
+    let currentPlayingId = null;
+
+    async function apiRequest(path) {
+      const res = await fetch(BASE_URL + path);
+      if (!res.ok) throw new Error("Server error: " + res.status);
+      return res.json();
+    }
+
+    async function doSearch() {
+      const q = qInput.value.trim();
+      if (!q) { infoEl.style.display = ""; infoEl.textContent = "Masukkan kata kunci dulu."; resultsEl.style.display = "none"; return; }
+      infoEl.style.display = ""; infoEl.textContent = "Loading…";
+      resultsEl.style.display = "none";
+      try {
+        const data = await apiRequest(`/api/search?q=${encodeURIComponent(q)}`);
+        renderResults(data.tracks || []);
+      } catch (e) {
+        console.error(e);
+        infoEl.style.display = ""; infoEl.textContent = "Gagal connect ke backend. Pastikan backend running dan CORS diaktifkan.";
+        resultsEl.style.display = "none";
+      }
+    }
+
+    function renderResults(items) {
+      resultsEl.innerHTML = "";
+      if (!items || items.length === 0) {
+        infoEl.style.display = ""; infoEl.textContent = "No results found";
+        resultsEl.style.display = "none";
+        return;
+      }
+      infoEl.style.display = "none";
+      resultsEl.style.display = "";
+
+      items.forEach((t) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        const img = document.createElement('img');
+        img.className = 'cover';
+        img.src = t.image || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"></svg>';
+        img.alt = t.name;
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        const title = document.createElement('div');
+        title.className = 'title';
+        title.textContent = t.name;
+        const sub = document.createElement('div');
+        sub.className = 'sub';
+        sub.textContent = (t.artists || []).join(', ');
+
+        meta.appendChild(title);
+        meta.appendChild(sub);
+
+        const ctr = document.createElement('div');
+        ctr.className = 'controls';
+
+        const play = document.createElement('button');
+        play.className = 'audio-btn';
+        play.textContent = 'Play';
+        play.onclick = (ev) => togglePlay(t, play);
+
+        const open = document.createElement('a');
+        open.className = 'link';
+        open.textContent = 'Open Spotify';
+        open.href = t.external_url || '#';
+        open.target = '_blank';
+        open.rel = 'noopener noreferrer';
+
+        ctr.appendChild(play);
+        ctr.appendChild(open);
+
+        card.appendChild(img);
+        card.appendChild(meta);
+        card.appendChild(ctr);
+        resultsEl.appendChild(card);
+      });
+    }
+
+    function togglePlay(track, btn) {
+      // stop current
+      if (currentPlayingId && currentPlayingId === track.id) {
+        // pause
+        if (currentAudio) {
+          currentAudio.pause();
+          currentAudio = null;
+          currentPlayingId = null;
+          btn.textContent = 'Play';
+        }
+        return;
+      }
+
+      // stop existing audio
+      if (currentAudio) {
+        currentAudio.pause();
+        // find previous play button and reset text (best-effort)
+        const prev = document.querySelector('.audio-btn.playing');
+        if (prev) { prev.classList.remove('playing'); prev.textContent = 'Play'; }
+      }
+
+      // if no preview URL -> open spotify instead
+      if (!track.preview_url) {
+        alert('Preview tidak tersedia untuk track ini. Buka di Spotify untuk versi lengkap.');
+        return;
+      }
+
+      const audio = new Audio(track.preview_url);
+      currentAudio = audio;
+      currentPlayingId = track.id;
+
+      // update UI
+      document.querySelectorAll('.audio-btn').forEach(b => b.classList.remove('playing'));
+      btn.classList.add('playing');
+      btn.textContent = 'Loading…';
+
+      audio.play().then(() => {
+        btn.textContent = 'Pause';
+      }).catch(err => {
+        console.error(err);
+        alert('Gagal memutar preview. Mungkin file diblokir oleh browser/HTTPs mismatch.');
+        btn.textContent = 'Play';
+        currentAudio = null;
+        currentPlayingId = null;
+      });
+
+      audio.onended = () => {
+        btn.classList.remove('playing');
+        btn.textContent = 'Play';
+        currentAudio = null;
+        currentPlayingId = null;
+      }
+    }
+
+    // events
+    searchBtn.addEventListener('click', doSearch);
+    qInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(); });
+
+    darkBtn.addEventListener('click', () => {
+      document.documentElement.style.setProperty('--bg', '#071126');
+      document.documentElement.style.setProperty('--card', '#071d2b');
+      document.documentElement.style.setProperty('--muted', '#9fb0c7');
+      document.documentElement.style.setProperty('--accent', '#4fd1c5');
+    });
+
+    // quick demo: if there's query param q in URL, run search automatically
+    (function autoSearchFromQuery() {
+      const params = new URLSearchParams(location.search);
+      if (params.get('q')) {
+        qInput.value = params.get('q');
+        doSearch();
+      }
+    })();
+  </script>
 </body>
 </html>
