@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <title>NeonTube — Dark Futuristic Music Player</title>
 <meta name="description" content="Dark neon YouTube music player — search & play full tracks. Single-file.">
-
 <style>
   :root{
     --bg:#05060a;
@@ -22,7 +21,6 @@
   header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
   .logo{display:flex;align-items:center;gap:10px}
   .mark{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#0ff,#7c4dff);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 30px rgba(124,77,255,0.12),0 2px 8px rgba(0,245,255,0.06)}
-  .mark svg{filter:drop-shadow(0 6px 12px rgba(0,245,255,0.08))}
   h1{font-size:18px;margin:0;letter-spacing:0.6px}
   p.lead{margin:2px 0 0;color:var(--muted);font-size:13px}
 
@@ -44,7 +42,6 @@
     border-radius:14px;padding:12px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(2,6,23,0.6)
   }
 
-  /* results */
   .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
   .card{display:flex;gap:12px;align-items:flex-start;padding:10px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));border:1px solid rgba(255,255,255,0.02)}
   .thumb{width:120px;height:70px;border-radius:8px; overflow:hidden;flex-shrink:0;box-shadow:0 6px 18px rgba(0,0,0,0.6)}
@@ -57,7 +54,6 @@
   .playBtn{background:linear-gradient(90deg,#00f5ff,#7c4dff);border:0;color:#051019;padding:8px 12px;border-radius:10px;font-weight:700;cursor:pointer}
   .linkBtn{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--neon1);padding:8px 10px;border-radius:10px}
 
-  /* sidebar / player */
   .sidebar .now{display:flex;gap:12px;align-items:center}
   .now .cover{width:86px;height:86px;border-radius:10px;overflow:hidden}
   .now .cover img{width:100%;height:100%;object-fit:cover}
@@ -70,10 +66,7 @@
   .progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#00f5ff,#7c4dff)}
 
   footer.small{margin-top:12px;color:var(--muted);font-size:12px}
-
-  /* subtle neon glow when hover */
   .card:hover{box-shadow:0 10px 30px rgba(124,77,255,0.06)}
-  .playBtn:active,.circle:active{transform:translateY(1px)}
 </style>
 </head>
 <body>
@@ -81,7 +74,6 @@
     <header>
       <div class="logo">
         <div class="mark" aria-hidden="true">
-          <!-- lightning/music icon -->
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2v10" stroke="#04121a" stroke-width="1.6" stroke-linecap="round"/><path d="M6 12l6-6 6 6" stroke="#04121a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div>
@@ -100,9 +92,7 @@
 
     <div class="content">
       <main class="panel">
-        <div id="results" class="results">
-          <!-- search results go here -->
-        </div>
+        <div id="results" class="results"></div>
       </main>
 
       <aside class="sidebar panel">
@@ -131,20 +121,12 @@
     </div>
   </div>
 
-  <!-- YouTube IFrame API -->
-  <script src="https://www.youtube.com/iframe_api"></script>
-
 <script>
-/* ================== CONFIG ================== */
-/* GANTI API KEY DISINI dengan YouTube Data API v3 key */
+/* ====== CONFIG ====== */
+/* GANTI INI dengan API Key YouTube Data v3 kamu */
 const API_KEY = "AIzaSyBle-EJDQ_3HzYcPwQRodGjKx3Lq4Ep0b8";
-/* ============================================ */
+/* ==================== */
 
-if (!API_KEY || API_KEY === "AIzaSyBle-EJDQ_3HzYcPwQRodGjKx3Lq4Ep0b8") {
-  console.warn("YouTube API key missing. Replace API_KEY in the HTML.");
-}
-
-/* helpers */
 const $ = id => document.getElementById(id);
 const resultsEl = $("results");
 const qEl = $("q");
@@ -159,41 +141,30 @@ const nowArtist = $("nowArtist");
 const openYT = $("openYT");
 const progressBar = $("progressBar");
 
-let playlist = []; // array of {id, title, channel, thumb}
+let playlist = [];
 let currentIndex = -1;
-let ytPlayer;
-let progressInterval;
+let playing = false;
+let iframeEl = null;
+let progressInterval = null;
 
-/* ===== YouTube Data helpers ===== */
+/* === YouTube Data helpers (search & details) === */
 async function ytSearch(q){
   const url = new URL("https://www.googleapis.com/youtube/v3/search");
-  url.search = new URLSearchParams({
-    key: API_KEY,
-    q,
-    part: "snippet",
-    maxResults: 12,
-    type: "video"
-  });
+  url.search = new URLSearchParams({ key: API_KEY, q, part: "snippet", maxResults: 12, type: "video" });
   const r = await fetch(url);
   if (!r.ok) throw new Error("YouTube API error: "+r.status);
   const j = await r.json();
   return j.items || [];
 }
-
-/* single video details (used when user pastes a URL) */
-async function videoDetails(id){
+async function videoDetailsById(id){
   const url = new URL("https://www.googleapis.com/youtube/v3/videos");
-  url.search = new URLSearchParams({
-    key: API_KEY,
-    id,
-    part: "snippet,contentDetails"
-  });
+  url.search = new URLSearchParams({ key: API_KEY, id, part: "snippet,contentDetails" });
   const r = await fetch(url);
   if (!r.ok) throw new Error("Video details error: "+r.status);
   const j = await r.json();
-  return (j.items && j.items[0]) || null;
+  if (!j.items || !j.items.length) return null;
+  return { id: j.items[0].id, snippet: j.items[0].snippet };
 }
-
 function extractId(s){
   try{
     const u = new URL(s);
@@ -226,7 +197,7 @@ function renderItems(items){
         <div class="title">${escapeHtml(title)}</div>
         <div class="sub">${escapeHtml(channel)}</div>
         <div class="controls">
-          <button class="playBtn playBtnNeon" data-id="${vid}" data-thumb="${escapeHtml(thumb)}" data-title="${escapeHtml(title)}" data-channel="${escapeHtml(channel)}">Play</button>
+          <button class="playBtn" data-id="${vid}" data-thumb="${thumb}" data-title="${escapeHtml(title)}" data-channel="${escapeHtml(channel)}">Play</button>
           <a class="linkBtn" target="_blank" rel="noopener noreferrer" href="https://www.youtube.com/watch?v=${vid}">YouTube</a>
         </div>
       </div>
@@ -235,8 +206,6 @@ function renderItems(items){
   });
   attachPlayHandlers();
 }
-
-/* attach handlers */
 function attachPlayHandlers(){
   document.querySelectorAll(".playBtn").forEach(btn=>{
     btn.onclick = () => {
@@ -244,7 +213,6 @@ function attachPlayHandlers(){
       const thumb = btn.dataset.thumb;
       const title = btn.dataset.title;
       const channel = btn.dataset.channel;
-      // insert into playlist right after currentIndex
       if (currentIndex === -1){
         playlist = [{id,title,channel,thumb}];
         currentIndex = 0;
@@ -253,68 +221,50 @@ function attachPlayHandlers(){
         currentIndex = currentIndex+1;
       }
       loadAtIndex(currentIndex);
-      playVideo();
+      playTrack(); // user gesture => autoplay allowed
     };
   });
 }
-
-/* escape */
 function escapeHtml(s){ return String(s||"").replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
-/* ===== YouTube IFrame player integration ===== */
-
-/* Ensure hidden player element exists BEFORE YT API tries to attach */
-function ensureHiddenPlayerEl(){
-  let div = document.getElementById("yt-hidden-player");
-  if (!div){
-    div = document.createElement("div");
-    div.id = "yt-hidden-player";
-    // keep it offscreen but present in DOM
-    div.style.width = "0";
-    div.style.height = "0";
-    div.style.position = "absolute";
-    div.style.left = "-9999px";
-    document.body.appendChild(div);
-  }
+/* ===== Player with iframe + postMessage control ===== */
+function ensureIframe(){
+  if (iframeEl) return iframeEl;
+  iframeEl = document.createElement("iframe");
+  iframeEl.width = "480";
+  iframeEl.height = "270";
+  iframeEl.style.border = "0";
+  iframeEl.allow = "autoplay; encrypted-media; fullscreen";
+  iframeEl.id = "yt-player-iframe";
+  // put iframe into body (hidden area in page). Show small when playing.
+  iframeEl.style.display = "none";
+  document.body.appendChild(iframeEl);
+  return iframeEl;
 }
 
-/* This function will be called by YouTube API when ready */
-function onYouTubeIframeAPIReady(){
-  ensureHiddenPlayerEl();
-  try {
-    ytPlayer = new YT.Player("yt-hidden-player", {
-      height: "0",
-      width: "0",
-      videoId: "",
-      playerVars: { playsinline: 1, rel: 0, modestbranding: 1 },
-      events: { onStateChange: onStateChange, onError: onPlayerError }
-    });
-  } catch (e) {
-    console.error("Failed to create YT player:", e);
-  }
+function setIframeSrcForVideo(vid, autoplay){
+  const base = "https://www.youtube.com/embed/";
+  // enablejsapi=1 so we can send postMessage commands; origin param helps
+  const origin = encodeURIComponent(location.origin);
+  const src = `${base}${vid}?autoplay=${autoplay?1:0}&rel=0&playsinline=1&enablejsapi=1&origin=${origin}`;
+  ensureIframe().src = src;
+  // show small visible player area inside sidebar when playing
+  iframeEl.style.display = "block";
+  iframeEl.style.width = "100%";
+  iframeEl.style.height = "200px";
+  // if you prefer hidden playback, set style.display='none' instead
 }
 
-function onStateChange(e){
-  const st = e.data;
-  if (st === YT.PlayerState.ENDED){
-    nextTrack();
-  } else if (st === YT.PlayerState.PLAYING){
-    playBtn.textContent = "⏸";
-    startProgress();
-  } else {
-    playBtn.textContent = "▶";
-    stopProgress();
-  }
+/* send command to iframe (requires enablejsapi=1) */
+function postCommand(cmd, args = []){
+  if (!iframeEl || !iframeEl.contentWindow) return;
+  try{
+    const msg = JSON.stringify({ event: "command", func: cmd, args });
+    iframeEl.contentWindow.postMessage(msg, "*");
+  }catch(e){}
 }
 
-function onPlayerError(e){
-  console.error("YT Player error", e);
-  // show non-blocking message
-  try { alert("Playback error. Try another track."); } catch(e){}
-  nextTrack();
-}
-
-/* load & control playlist */
+/* load / show track metadata */
 function loadAtIndex(i){
   if (!playlist[i]) return;
   const it = playlist[i];
@@ -322,47 +272,73 @@ function loadAtIndex(i){
   nowTitle.textContent = it.title || "Untitled";
   nowArtist.textContent = it.channel || "";
   openYT.onclick = ()=>window.open(`https://www.youtube.com/watch?v=${it.id}`,'_blank');
-  // load into player but do not play automatically until playVideo is called
-  if (ytPlayer && typeof ytPlayer.loadVideoById === "function"){
-    try{
-      ytPlayer.loadVideoById(it.id);
-    }catch(e){
-      // fallback: try later
-      setTimeout(()=>{ if (ytPlayer && typeof ytPlayer.loadVideoById === "function") ytPlayer.loadVideoById(it.id); },500);
-    }
+  // create iframe src but don't autoplay unless requested
+  setIframeSrcForVideo(it.id, false);
+}
+
+/* play / pause / next / prev */
+function playTrack(){
+  if (currentIndex === -1 || !playlist[currentIndex]) return alert("No track loaded");
+  // if iframe not loaded for current video, set with autoplay
+  setIframeSrcForVideo(playlist[currentIndex].id, true);
+  playing = true;
+  playBtn.textContent = "⏸";
+  startProgress(); // approximate
+}
+function pauseTrack(){
+  // try to pause via postMessage command
+  postCommand("pauseVideo");
+  playing = false;
+  playBtn.textContent = "▶";
+  stopProgress();
+}
+function togglePlay(){
+  if (!iframeEl) { playTrack(); return; }
+  if (!playing) {
+    // try to play (postMessage) — some browsers require user gesture; we attempt first
+    postCommand("playVideo");
+    playing = true;
+    playBtn.textContent = "⏸";
+    startProgress();
   } else {
-    // try later when player ready
-    setTimeout(()=>{ if (ytPlayer && typeof ytPlayer.loadVideoById === "function") ytPlayer.loadVideoById(it.id); },500);
+    pauseTrack();
+  }
+}
+function nextTrack(){
+  if (currentIndex < playlist.length - 1){
+    currentIndex++;
+    loadAtIndex(currentIndex);
+    // autoplay after small delay so iframe is ready
+    setTimeout(()=>{ postCommand("playVideo"); playing = true; playBtn.textContent="⏸"; startProgress(); }, 600);
+  } else {
+    // no next: stop
+    playing = false;
+    playBtn.textContent = "▶";
+    stopProgress();
+  }
+}
+function prevTrack(){
+  if (currentIndex > 0){
+    currentIndex--;
+    loadAtIndex(currentIndex);
+    setTimeout(()=>{ postCommand("playVideo"); playing = true; playBtn.textContent="⏸"; startProgress(); }, 600);
+  } else {
+    // restart current
+    postCommand("seekTo", [0]);
   }
 }
 
-/* playback controls */
-function playVideo(){
-  if (!ytPlayer) return alert("Player not ready");
-  const state = ytPlayer.getPlayerState ? ytPlayer.getPlayerState() : -1;
-  if (state === YT.PlayerState.PLAYING) ytPlayer.pauseVideo();
-  else ytPlayer.playVideo();
-}
-function pauseVideo(){ if (ytPlayer) ytPlayer.pauseVideo(); }
-function nextTrack(){ if (currentIndex < playlist.length - 1){ currentIndex++; loadAtIndex(currentIndex); playVideo(); } else { // end of list
-  if (ytPlayer) ytPlayer.stopVideo();
-  }
-}
-function prevTrack(){ if (ytPlayer) ytPlayer.seekTo(0); }
-
-/* progress bar */
+/* progress (approx): we cannot read cross-origin player time reliably without full API events,
+   but we can poll via postMessage request (not reliable). So keep simple: fake progress by CSS animation while playing. */
 function startProgress(){
   stopProgress();
+  progressBar.style.width = "0%";
+  let t = 0;
   progressInterval = setInterval(()=>{
-    try{
-      const dur = ytPlayer.getDuration();
-      const pos = ytPlayer.getCurrentTime();
-      if (dur && !isNaN(dur) && dur>0){
-        const pct = Math.max(0,Math.min(100,(pos/dur)*100));
-        progressBar.style.width = pct + "%";
-      }
-    }catch(e){}
-  },300);
+    t += 1;
+    const pct = Math.min(100, t/1.2); // approximate (will reach 100 after ~120s)
+    progressBar.style.width = pct + "%";
+  }, 1000);
 }
 function stopProgress(){ if (progressInterval) clearInterval(progressInterval); }
 
@@ -371,10 +347,9 @@ goBtn.onclick = async ()=>{
   const q = qEl.value.trim();
   if (!q) return;
   try{
-    // check if youtube url
     const id = extractId(q);
     if (id){
-      const det = await videoDetails(id);
+      const det = await videoDetailsById(id);
       if (det) renderItems([det]);
       return;
     }
@@ -388,16 +363,16 @@ goBtn.onclick = async ()=>{
 };
 clearBtn.onclick = ()=>{ qEl.value=''; resultsEl.innerHTML=''; };
 
-playBtn.onclick = ()=>playVideo();
+playBtn.onclick = ()=>togglePlay();
 prevBtn.onclick = ()=>prevTrack();
 nextBtn.onclick = ()=>nextTrack();
-
-/* keyboard enter */
 qEl.addEventListener("keydown", (e)=>{ if (e.key==='Enter') goBtn.click(); });
 
-/* initial safety: ensure hidden player exists in case API loads later */
-ensureHiddenPlayerEl();
-
+/* listen to messages from iframe to detect state changes (optional) */
+window.addEventListener("message", (ev)=>{
+  // YouTube posts messages we could parse for state — many browsers include origin checks; keep light
+  // Not used heavily here; leaving listener in case future debugging needed.
+}, false);
 </script>
 </body>
 </html>
