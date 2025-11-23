@@ -58,52 +58,25 @@
   footer.small{margin-top:12px;color:var(--muted);font-size:12px}
   .card:hover{box-shadow:0 10px 30px rgba(124,77,255,0.06)}
 
-  /* MINI POPUP player */
-  .mini-player{
-    position:fixed;right:14px;bottom:14px;z-index:99999;
-    background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
-    border:1px solid rgba(255,255,255,0.06);backdrop-filter:blur(6px);
-    padding:8px 10px;border-radius:14px;display:flex;gap:10px;align-items:center;min-width:260px;box-shadow:0 10px 40px rgba(0,0,0,0.6);
-    transition:transform .18s ease, box-shadow .18s ease;
+  /* neon glow outline animation for sheet when playing */
+  .sheet.playing::before{
+    content:'';position:absolute;inset:0;border-radius:12px;padding:2px;background:linear-gradient(90deg, rgba(0,245,255,0.12), rgba(124,77,255,0.12));filter:blur(14px);
+    animation:neonPulse 2.2s infinite linear; pointer-events:none;
   }
-  .mini-player.dragging{opacity:0.95; transform:scale(1.01); box-shadow:0 18px 60px rgba(0,0,0,0.7)}
-  .mini-thumb{width:56px;height:40px;border-radius:6px;overflow:hidden;flex-shrink:0}
-  .mini-thumb img{width:100%;height:100%;object-fit:cover}
-  .mini-meta{flex:1;min-width:100px}
-  .mini-title{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .mini-sub{font-size:12px;color:var(--muted);margin-top:4px}
-  .mini-controls{display:flex;gap:8px;align-items:center}
-  .mini-btn{width:40px;height:36px;border-radius:8px;border:0;background:linear-gradient(90deg,#00f5ff,#7c4dff);color:#051019;font-weight:800;cursor:pointer}
-  .mini-close{background:transparent;border:0;color:var(--muted);font-weight:800;cursor:pointer;padding:6px;border-radius:6px}
-  .mini-player.hidden{display:none}
-  @media(max-width:520px){ .mini-player{right:10px;bottom:10px;min-width:200px} .mini-title{max-width:100px} }
-
-  /* neon glow outline animation */
-  .mini-player::before{
-    content:'';
-    position:absolute;inset:0;border-radius:14px;padding:2px;
-    background:linear-gradient(90deg, rgba(0,245,255,0.12), rgba(124,77,255,0.12));
-    filter:blur(14px);
-    opacity:0;
-    transition:opacity .25s;
-    pointer-events:none;
-  }
-  .mini-player.playing::before{ opacity:1; animation:neonPulse 2.2s infinite linear; }
-
   @keyframes neonPulse{
     0%{ filter:blur(6px) drop-shadow(0 0 6px rgba(0,245,255,0.2)); transform:scale(1); }
     50%{ filter:blur(20px) drop-shadow(0 0 20px rgba(124,77,255,0.2)); transform:scale(1.02); }
     100%{ filter:blur(6px) drop-shadow(0 0 6px rgba(0,245,255,0.2)); transform:scale(1); }
   }
 
-  /* simple equalizer */
-  .mini-eq{display:inline-flex;gap:4px;align-items:flex-end;margin-right:6px}
-  .mini-eq .bar{width:4px;height:8px;background:linear-gradient(180deg,var(--neon2),var(--neon1));border-radius:2px;opacity:0.9;transform-origin:center bottom}
-  .mini-eq.playing .bar{animation:barAnim 800ms infinite linear}
-  .mini-eq .bar:nth-child(1){animation-delay:0ms}
-  .mini-eq .bar:nth-child(2){animation-delay:120ms}
-  .mini-eq .bar:nth-child(3){animation-delay:240ms}
-  .mini-eq .bar:nth-child(4){animation-delay:360ms}
+  /* simple equalizer (inside sheet area) */
+  .sheet-eq{display:inline-flex;gap:4px;align-items:flex-end;margin-right:6px}
+  .sheet-eq .bar{width:4px;height:8px;background:linear-gradient(180deg,var(--neon2),var(--neon1));border-radius:2px;opacity:0.9;transform-origin:center bottom}
+  .sheet-eq.playing .bar{animation:barAnim 800ms infinite linear}
+  .sheet-eq .bar:nth-child(1){animation-delay:0ms}
+  .sheet-eq .bar:nth-child(2){animation-delay:120ms}
+  .sheet-eq .bar:nth-child(3){animation-delay:240ms}
+  .sheet-eq .bar:nth-child(4){animation-delay:360ms}
   @keyframes barAnim{
     0%{ transform:scaleY(0.3) }
     25%{ transform:scaleY(1.0) }
@@ -111,6 +84,57 @@
     75%{ transform:scaleY(0.8) }
     100%{ transform:scaleY(0.3) }
   }
+
+  /* BOTTOM SHEET (YouTube style) */
+  .sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 72px; /* collapsed height */
+    z-index: 99980;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: linear-gradient(180deg, rgba(10,10,14,0.95), rgba(8,8,12,0.95));
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    transform: translateY(0);
+    transition: height .2s ease, transform .18s ease;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.6);
+    overflow: visible;
+  }
+  .sheet.expanded { height: 66vh; } /* when expanded */
+  .sheet .handle {
+    width: 42px; height: 6px; border-radius: 4px; background: rgba(255,255,255,0.06);
+    position: absolute; top: 8px; left: 50%; transform:translateX(-50%); cursor:grab;
+  }
+  .sheet .left {
+    display:flex;align-items:center;gap:12px;flex:1;min-width:0;
+  }
+  .sheet .thumb-sm{width:56px;height:56px;border-radius:8px;overflow:hidden;flex-shrink:0}
+  .sheet .thumb-sm img{width:100%;height:100%;object-fit:cover}
+  .sheet .meta { overflow:hidden; min-width:0 }
+  .sheet .meta .title { font-weight:800; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  .sheet .meta .sub { color:var(--muted); font-size:13px; margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  .sheet .controls { display:flex; gap:10px; align-items:center; margin-left:auto }
+  .sheet .ctrl-btn { width:48px; height:40px; border-radius:10px; border:0; background:linear-gradient(90deg,#00f5ff,#7c4dff); color:#051019; font-weight:800; cursor:pointer }
+  .sheet .small-progress { position:absolute; left:0; right:0; bottom:0; height:4px; background: rgba(255,255,255,0.03); }
+  .sheet .small-progress > i{ display:block; height:100%; width:0; background: linear-gradient(90deg,#00f5ff,#7c4dff); }
+
+  /* expanded content */
+  .sheet .expanded-content { display:none; padding:18px; gap:12px; flex-direction:column; height: calc(100% - 72px); overflow:auto; }
+  .sheet.expanded .expanded-content { display:flex; }
+  .sheet .player-big { display:flex; gap:16px; align-items:center }
+  .player-big .big-thumb { width:160px; height:160px; border-radius:10px; overflow:hidden }
+  .player-big .big-thumb img{ width:100%; height:100%; object-fit:cover }
+  .player-big .big-meta { flex:1 }
+  .player-big .big-meta .title { font-size:18px; font-weight:900 }
+  .player-big .controls-row{ display:flex; gap:12px; align-items:center; margin-top:12px }
+
+  /* small screen adjustments */
+  @media(max-width:520px){ .sheet .ctrl-btn{ width:42px;height:38px } .player-big .big-thumb{ width:120px;height:120px } }
 </style>
 </head>
 <body>
@@ -165,36 +189,82 @@
     </div>
   </div>
 
-  <!-- MINI POPUP ELEMENT -->
-  <div id="mini" class="mini-player hidden" role="dialog" aria-label="mini player" title="Drag to move">
-    <div class="mini-eq" id="miniEq" aria-hidden="true">
-      <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+  <!-- BOTTOM SHEET -->
+  <div id="sheet" class="sheet" aria-hidden="true">
+    <div class="handle" id="sheetHandle" aria-hidden="true"></div>
+
+    <div class="left">
+      <div class="thumb-sm"><img id="sheetThumb" src="" alt=""></div>
+      <div class="meta">
+        <div id="sheetTitle" class="title">Nothing playing</div>
+        <div id="sheetSub" class="sub">—</div>
+      </div>
     </div>
 
-    <div class="mini-thumb"><img id="miniThumb" src="" alt=""></div>
-    <div class="mini-meta">
-      <div id="miniTitle" class="mini-title">Nothing playing</div>
-      <div id="miniSub" class="mini-sub">—</div>
+    <div class="controls">
+      <div class="sheet-eq" id="sheetEq" aria-hidden="true">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      </div>
+      <button id="sheetPrev" class="ctrl-btn" title="Previous">⏮</button>
+      <button id="sheetPlay" class="ctrl-btn" title="Play/Pause">▶</button>
+      <button id="sheetNext" class="ctrl-btn" title="Next">⏭</button>
     </div>
-    <div class="mini-controls">
-      <button id="miniPrev" class="mini-btn" title="Previous">⏮</button>
-      <button id="miniPlay" class="mini-btn" title="Play/Pause">▶</button>
-      <button id="miniNext" class="mini-btn" title="Next">⏭</button>
-      <button id="miniClose" class="mini-close" title="Close">✕</button>
+
+    <div class="small-progress"><i id="sheetProgress"></i></div>
+
+    <div class="expanded-content" id="sheetExpanded">
+      <div class="player-big">
+        <div class="big-thumb"><img id="bigThumb" src="" alt=""></div>
+        <div class="big-meta">
+          <div id="bigTitle" class="title">Nothing playing</div>
+          <div id="bigSub" class="sub">—</div>
+          <div class="controls-row">
+            <button id="bigPrev" class="ctrl-btn">⏮</button>
+            <button id="bigPlay" class="ctrl-btn">▶</button>
+            <button id="bigNext" class="ctrl-btn">⏭</button>
+            <button id="bigOpen" class="ctrl-btn" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--neon1)">YouTube</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;color:var(--muted);font-size:14px">Playlist and more controls can go here.</div>
     </div>
   </div>
 
 <script>
 /* ====== CONFIG ====== */
-/* GANTI INI dengan API Key YouTube Data v3 kamu (opsional) */
-const API_KEY = "AIzaSyBle-EJDQ_3HzYcPwQRodGjKx3Lq4Ep0b8";
+const API_KEY = "AIzaSyBle-EJDQ_3HzYcPwQRodGjKx3Lq4Ep0b8"; // ganti kalo perlu
 /* ==================== */
 
 const $ = id => document.getElementById(id);
+
+/* main UI refs */
 const resultsEl = $("results");
 const qEl = $("q");
 const goBtn = $("go");
 const clearBtn = $("clear");
+
+/* sheet refs */
+const sheet = $("sheet");
+const sheetHandle = $("sheetHandle");
+const sheetThumb = $("sheetThumb");
+const sheetTitle = $("sheetTitle");
+const sheetSub = $("sheetSub");
+const sheetPlay = $("sheetPlay");
+const sheetPrev = $("sheetPrev");
+const sheetNext = $("sheetNext");
+const sheetProgress = $("sheetProgress");
+const sheetExpanded = $("sheetExpanded");
+const sheetEq = $("sheetEq");
+const bigThumb = $("bigThumb");
+const bigTitle = $("bigTitle");
+const bigSub = $("bigSub");
+const bigPlay = $("bigPlay");
+const bigPrev = $("bigPrev");
+const bigNext = $("bigNext");
+const bigOpen = $("bigOpen");
+
+/* sidebar small controls */
 const playBtn = $("play");
 const prevBtn = $("prev");
 const nextBtn = $("next");
@@ -204,23 +274,13 @@ const nowArtist = $("nowArtist");
 const openYT = $("openYT");
 const progressBar = $("progressBar");
 
-const mini = $("mini");
-const miniThumb = $("miniThumb");
-const miniTitle = $("miniTitle");
-const miniSub = $("miniSub");
-const miniPlay = $("miniPlay");
-const miniClose = $("miniClose");
-const miniPrev = $("miniPrev");
-const miniNext = $("miniNext");
-const miniEq = $("miniEq");
-
 let playlist = [];
 let currentIndex = -1;
 let playing = false;
 let iframeEl = null;
 let progressInterval = null;
 
-/* YT Data helpers */
+/* YouTube Data helpers */
 async function ytSearch(q){
   const url = new URL("https://www.googleapis.com/youtube/v3/search");
   url.search = new URLSearchParams({ key: API_KEY, q, part: "snippet", maxResults: 12, type: "video" });
@@ -300,16 +360,14 @@ function attachPlayHandlers(){
 }
 function escapeHtml(s){ return String(s||"").replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
-/* IFRAME + postMessage control */
+/* IFRAME control */
 function ensureIframe(){
   if (iframeEl) return iframeEl;
   iframeEl = document.createElement("iframe");
-  iframeEl.width = "480";
-  iframeEl.height = "270";
-  iframeEl.style.border = "0";
   iframeEl.allow = "autoplay; encrypted-media; fullscreen";
-  iframeEl.id = "yt-player-iframe";
   iframeEl.style.display = "none";
+  iframeEl.style.border = "0";
+  iframeEl.id = "yt-embed";
   document.body.appendChild(iframeEl);
   return iframeEl;
 }
@@ -325,7 +383,7 @@ function setIframeSrcForVideo(vid, autoplay){
     iframeEl.style.height = "180px";
     iframeEl.style.position = "fixed";
     iframeEl.style.right = "14px";
-    iframeEl.style.bottom = "84px"; /* above mini */
+    iframeEl.style.bottom = "84px";
     iframeEl.style.zIndex = "99990";
     iframeEl.style.borderRadius = "10px";
     iframeEl.style.boxShadow = "0 20px 40px rgba(0,0,0,0.6)";
@@ -339,7 +397,7 @@ function postCommand(cmd, args = []){
   }catch(e){}
 }
 
-/* load & show data */
+/* load & show */
 function loadAtIndex(i){
   if (!playlist[i]) return;
   const it = playlist[i];
@@ -347,50 +405,45 @@ function loadAtIndex(i){
   nowTitle.textContent = it.title || "Untitled";
   nowArtist.textContent = it.channel || "";
   openYT.onclick = ()=>window.open(`https://www.youtube.com/watch?v=${it.id}`,'_blank');
-  // update mini
-  miniThumb.src = it.thumb || "";
-  miniTitle.textContent = it.title || "Untitled";
-  miniSub.textContent = it.channel || "";
-  // prepare iframe without autoplay
+
+  // sheet
+  sheetThumb.src = it.thumb || "";
+  sheetTitle.textContent = it.title || "Untitled";
+  sheetSub.textContent = it.channel || "";
+
+  bigThumb.src = it.thumb || "";
+  bigTitle.textContent = it.title || "Untitled";
+  bigSub.textContent = it.channel || "";
+  bigOpen.onclick = ()=>window.open(`https://www.youtube.com/watch?v=${it.id}`,'_blank');
+
   setIframeSrcForVideo(it.id, false);
-  showMini(true);
+  showSheet(true);
 }
 
-/* play / pause / next / prev */
+/* playback controls */
 function playTrack(){
   if (currentIndex === -1 || !playlist[currentIndex]) return alert("No track loaded");
   setIframeSrcForVideo(playlist[currentIndex].id, true);
   setTimeout(()=>postCommand("playVideo"), 600);
   playing = true;
-  playBtn.textContent = "⏸";
-  miniPlay.textContent = "⏸";
-  showMini(true);
+  updatePlayUI(true);
   startProgress();
-  mini.classList.add("playing");
-  miniEq.classList.add("playing");
 }
 function pauseTrack(){
   postCommand("pauseVideo");
   playing = false;
-  playBtn.textContent = "▶";
-  miniPlay.textContent = "▶";
+  updatePlayUI(false);
   stopProgress();
-  mini.classList.remove("playing");
-  miniEq.classList.remove("playing");
 }
-function togglePlay(){
-  if (!playing) playTrack(); else pauseTrack();
-}
+function togglePlay(){ if (!playing) playTrack(); else pauseTrack(); }
 function nextTrack(){
   if (currentIndex < playlist.length - 1){
     currentIndex++;
     loadAtIndex(currentIndex);
     setTimeout(()=>postCommand("playVideo"),600);
-    playing=true; playBtn.textContent="⏸"; miniPlay.textContent="⏸"; startProgress();
-    mini.classList.add("playing"); miniEq.classList.add("playing");
+    playing=true; updatePlayUI(true); startProgress();
   } else {
-    playing=false; playBtn.textContent="▶"; miniPlay.textContent="▶"; stopProgress();
-    mini.classList.remove("playing"); miniEq.classList.remove("playing");
+    playing=false; updatePlayUI(false); stopProgress();
   }
 }
 function prevTrack(){
@@ -398,43 +451,61 @@ function prevTrack(){
     currentIndex--;
     loadAtIndex(currentIndex);
     setTimeout(()=>postCommand("playVideo"),600);
-    playing=true; playBtn.textContent="⏸"; miniPlay.textContent="⏸"; startProgress();
-    mini.classList.add("playing"); miniEq.classList.add("playing");
+    playing=true; updatePlayUI(true); startProgress();
   } else {
-    postCommand("seekTo", [0]);
+    postCommand("seekTo",[0]);
   }
 }
+function updatePlayUI(isPlaying){
+  const txt = isPlaying ? "⏸" : "▶";
+  playBtn && (playBtn.textContent = isPlaying ? "⏸" : "▶");
+  sheetPlay && (sheetPlay.textContent = txt);
+  bigPlay && (bigPlay.textContent = txt);
+  if (isPlaying) { sheet.classList.add("playing"); sheetEq.classList.add("playing"); } else { sheet.classList.remove("playing"); sheetEq.classList.remove("playing"); }
+}
 
-/* progress: approximate visual */
-function startProgress(){ stopProgress(); progressBar.style.width="0%"; let t=0; progressInterval=setInterval(()=>{ t+=1; const pct=Math.min(100,(t/1.2)); progressBar.style.width=pct+"%"; },1000); }
+/* progress (visual approximate) */
+function startProgress(){ stopProgress(); sheetProgress.style.width = "0%"; progressBar.style.width = "0%"; let t=0; progressInterval=setInterval(()=>{ t+=1; const pct=Math.min(100,(t/1.2)); sheetProgress.style.width = pct+"%"; progressBar.style.width = pct+"%"; },1000); }
 function stopProgress(){ if (progressInterval) clearInterval(progressInterval); }
 
-/* MINI UI */
-function showMini(v = true){ if (v) mini.classList.remove("hidden"); else mini.classList.add("hidden"); }
-miniPlay.onclick = (e)=>{ e.stopPropagation(); if (playing) pauseTrack(); else togglePlay(); };
-miniClose.onclick = (e)=>{ e.stopPropagation(); showMini(false); if (iframeEl) iframeEl.style.display='none'; };
-miniPrev.onclick = (e)=>{ e.stopPropagation(); prevTrack(); };
-miniNext.onclick = (e)=>{ e.stopPropagation(); nextTrack(); };
+/* sheet UI */
+function showSheet(open=true){
+  if (open){
+    sheet.classList.add("expanded");
+    sheet.setAttribute("aria-hidden","false");
+    sheetExpanded.scrollTop = 0;
+  } else {
+    sheet.classList.remove("expanded");
+    sheet.setAttribute("aria-hidden","true");
+  }
+}
+sheetPlay.onclick = ()=>togglePlay();
+sheetPrev.onclick = ()=>prevTrack();
+sheetNext.onclick = ()=>nextTrack();
+bigPlay.onclick = ()=>togglePlay();
+bigPrev.onclick = ()=>prevTrack();
+bigNext.onclick = ()=>nextTrack();
 
-// clicking mini opens main sidebar (scroll to top)
-mini.addEventListener("click", (e)=>{ if (e.target !== miniPlay && e.target !== miniClose && e.target !== miniPrev && e.target !== miniNext){ window.scrollTo({top:0,behavior:'smooth'}); } });
+/* sidebar small buttons */
+playBtn && (playBtn.onclick = ()=>togglePlay());
+prevBtn && (prevBtn.onclick = ()=>prevTrack());
+nextBtn && (nextBtn.onclick = ()=>nextTrack());
 
-/* UI hooks */
+/* search hooks */
 goBtn.onclick = async ()=>{
   const q = qEl.value.trim();
   if (!q) return;
   try{
     const id = extractId(q);
     if (id){
-      const det = API_KEY ? await videoDetailsById(id) : null;
+      const det = (API_KEY ? await videoDetailsById(id) : { id, snippet: { title: id, thumbnails:{ default:{ url: '' }}, channelTitle: '' } });
       if (det) renderItems([det]);
-      else renderItems([{ id, snippet: { title: id, thumbnails: { default: { url: '' } }, channelTitle: '' } }]);
       return;
     }
     resultsEl.innerHTML = `<div style="padding:18px;color:var(--muted)">Searching…</div>`;
     const items = API_KEY ? await ytSearch(q) : [];
     if (!items.length && !API_KEY) {
-      resultsEl.innerHTML = `<div style="padding:18px;color:var(--muted)">You didn't set an API key — search disabled.</div>`;
+      resultsEl.innerHTML = `<div style="padding:18px;color:var(--muted)">No API key — search disabled.</div>`;
       return;
     }
     renderItems(items);
@@ -445,65 +516,63 @@ goBtn.onclick = async ()=>{
 };
 clearBtn.onclick = ()=>{ qEl.value=''; resultsEl.innerHTML=''; };
 
-playBtn.onclick = ()=>togglePlay();
-prevBtn.onclick = ()=>prevTrack();
-nextBtn.onclick = ()=>nextTrack();
-qEl.addEventListener("keydown", (e)=>{ if (e.key==='Enter') goBtn.click(); });
+/* attach sheet drag (vertical) for swipe up/down */
+(function sheetDrag(){
+  let dragging = false;
+  let startY = 0;
+  let startHeight = 0;
+  const collapsedH = 72;
+  const maxH = Math.max(window.innerHeight * 0.85, 300);
 
-/* message listener (optional) */
-window.addEventListener("message",(ev)=>{ /* could parse player state messages here if needed */ }, false);
-
-/* DRAG: allow moving mini around (pointer events) */
-(function enableMiniDrag(){
-  let dragging = false, startX = 0, startY = 0, startLeft = 0, startTop = 0;
-  // ensure mini has explicit left/top when user drags (defaults: right/bottom)
-  mini.addEventListener('pointerdown', (e)=>{
-    // don't start drag on control buttons
-    if (e.target === miniPlay || e.target === miniClose || e.target === miniPrev || e.target === miniNext) return;
+  const handle = sheetHandle;
+  handle.addEventListener('pointerdown', (e)=>{
     dragging = true;
-    mini.setPointerCapture(e.pointerId);
-    mini.classList.add('dragging');
-    startX = e.clientX;
     startY = e.clientY;
-    // compute current position
-    const rect = mini.getBoundingClientRect();
-    startLeft = rect.left;
-    startTop = rect.top;
-    // switch to left/top positioning so we can move freely
-    mini.style.right = 'auto';
-    mini.style.bottom = 'auto';
-    mini.style.left = startLeft + 'px';
-    mini.style.top = startTop + 'px';
+    startHeight = sheet.classList.contains('expanded') ? maxH : collapsedH;
+    handle.setPointerCapture(e.pointerId);
+    document.body.style.userSelect = 'none';
   });
 
   window.addEventListener('pointermove', (e)=>{
     if (!dragging) return;
-    e.preventDefault();
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-    let nx = startLeft + dx;
-    let ny = startTop + dy;
-    // clamp to viewport
-    const pad = 8;
-    const w = mini.offsetWidth;
-    const h = mini.offsetHeight;
-    const maxX = window.innerWidth - w - pad;
-    const maxY = window.innerHeight - h - pad;
-    if (nx < pad) nx = pad;
-    if (ny < pad) ny = pad;
-    if (nx > maxX) nx = maxX;
-    if (ny > maxY) ny = maxY;
-    mini.style.left = nx + 'px';
-    mini.style.top = ny + 'px';
+    const dy = startY - e.clientY; // positive when dragging up
+    let newH = Math.min(maxH, Math.max(collapsedH, startHeight + dy));
+    const pct = (newH - collapsedH) / (maxH - collapsedH);
+    sheet.style.height = newH + 'px';
+    if (pct > 0.4) sheet.classList.add('expanded'); else sheet.classList.remove('expanded');
   });
 
   window.addEventListener('pointerup', (e)=>{
     if (!dragging) return;
     dragging = false;
-    mini.releasePointerCapture && mini.releasePointerCapture(e.pointerId);
-    mini.classList.remove('dragging');
+    document.body.style.userSelect = '';
+    if (sheet.classList.contains('expanded')) {
+      sheet.classList.add('expanded');
+      sheet.style.height = '66vh';
+    } else {
+      sheet.classList.remove('expanded');
+      sheet.style.height = '72px';
+    }
   });
 })();
+
+/* make sheet clickable to toggle */
+sheet.addEventListener('click', (e)=>{
+  const avoid = [sheetPlay, sheetPrev, sheetNext, bigPlay, bigPrev, bigNext, bigOpen];
+  if (avoid.includes(e.target)) return;
+  if (sheet.classList.contains('expanded')) {
+    const rect = sheet.getBoundingClientRect();
+    if (e.clientY > rect.top + 40) return;
+    showSheet(false);
+  } else {
+    showSheet(true);
+  }
+});
+
+function escapeHtml(s){ return String(s||"").replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+/* message listener (iframe) */
+window.addEventListener("message",(ev)=>{ /* optional: read player events */ }, false);
 
 /* initial demo (optional) */
 // qEl.value = "lofi hip hop live";
