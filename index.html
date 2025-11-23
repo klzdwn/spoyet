@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Music Preview — Free & Legal</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div>
+        <h1>Music Preview</h1>
+        <p class="sub">Preview 30s dari Spotify (legal) • YouTube fallback untuk versi penuh</p>
+      </div>
+      <div class="header-right">
+        <button id="darkToggle" class="btn small">Dark</button>
+      </div>
+    </header>
+
+    <section class="searchbar">
+      <input id="q" placeholder="Cari lagu atau artis... (contoh: imagine dragons)" />
+      <button id="searchBtn" class="btn">Search</button>
+    </section>
+
+    <div id="notice" class="notice">Tidak terhubung ke backend — menggunakan mock data. Set <code>BASE_URL</code> di <code>app.js</code> untuk live Spotify preview.</div>
+
+    <section id="controls" class="controls">
+      <button id="showFav" class="btn small">Favorites</button>
+      <button id="showAll" class="btn small">All</button>
+    </section>
+
+    <main id="grid" class="grid"></main>
+
+    <audio id="player"></audio>
+
+    <footer class="footer">
+      <small>Legal: Tidak ada bypass Spotify Premium. Preview 30s dapat diputar tanpa akun Premium jika tersedia; beberapa track tidak punya preview.</small>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
