@@ -12,8 +12,6 @@
     --muted:#97a1b5;
     --neon1:#00f5ff;
     --neon2:#7c4dff;
-    --accent:linear-gradient(90deg,var(--neon1),var(--neon2));
-    --glass:rgba(255,255,255,0.03);
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;background:radial-gradient(1200px 600px at 10% 10%, rgba(124,77,255,0.06), transparent), radial-gradient(800px 400px at 90% 90%, rgba(0,245,255,0.04), transparent), var(--bg); color:#e6f4ff; -webkit-font-smoothing:antialiased}
@@ -25,22 +23,14 @@
   p.lead{margin:2px 0 0;color:var(--muted);font-size:13px}
 
   .searchbar{display:flex;gap:10px;margin-top:14px}
-  .input{
-    flex:1;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    color:#dff6ff;font-size:15px;outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,0.02);
-  }
-  .btn{
-    background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px 14px;border-radius:12px;color:var(--neon1);font-weight:700;cursor:pointer;
-  }
+  .input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));color:#dff6ff;font-size:15px;outline:none}
+  .btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px 14px;border-radius:12px;color:var(--neon1);font-weight:700;cursor:pointer}
   .btn.primary{background:linear-gradient(90deg,#00f5ff33,#7c4dff33);border:1px solid rgba(255,255,255,0.04);color:#fff}
 
   .content{display:grid;grid-template-columns:1fr 360px;gap:16px;margin-top:18px}
   @media(max-width:980px){ .content{grid-template-columns:1fr} .sidebar{order:2} }
 
-  .panel{
-    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    border-radius:14px;padding:12px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(2,6,23,0.6)
-  }
+  .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:12px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(2,6,23,0.6)}
 
   .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
   .card{display:flex;gap:12px;align-items:flex-start;padding:10px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));border:1px solid rgba(255,255,255,0.02)}
@@ -67,6 +57,24 @@
 
   footer.small{margin-top:12px;color:var(--muted);font-size:12px}
   .card:hover{box-shadow:0 10px 30px rgba(124,77,255,0.06)}
+
+  /* MINI POPUP player */
+  .mini-player{
+    position:fixed;right:14px;bottom:14px;z-index:99999;
+    background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+    border:1px solid rgba(255,255,255,0.06);backdrop-filter:blur(6px);
+    padding:8px 10px;border-radius:14px;display:flex;gap:10px;align-items:center;min-width:220px;box-shadow:0 10px 40px rgba(0,0,0,0.6);
+  }
+  .mini-thumb{width:56px;height:40px;border-radius:6px;overflow:hidden;flex-shrink:0}
+  .mini-thumb img{width:100%;height:100%;object-fit:cover}
+  .mini-meta{flex:1;min-width:80px}
+  .mini-title{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mini-sub{font-size:12px;color:var(--muted);margin-top:4px}
+  .mini-controls{display:flex;gap:8px;align-items:center}
+  .mini-btn{width:40px;height:36px;border-radius:8px;border:0;background:linear-gradient(90deg,#00f5ff,#7c4dff);color:#051019;font-weight:800;cursor:pointer}
+  .mini-close{background:transparent;border:0;color:var(--muted);font-weight:800;cursor:pointer;padding:6px;border-radius:6px}
+  .mini-player.hidden{display:none}
+  @media(max-width:520px){ .mini-player{right:10px;bottom:10px;min-width:200px} .mini-title{max-width:100px} }
 </style>
 </head>
 <body>
@@ -121,6 +129,19 @@
     </div>
   </div>
 
+  <!-- MINI POPUP ELEMENT -->
+  <div id="mini" class="mini-player hidden" role="dialog" aria-label="mini player">
+    <div class="mini-thumb"><img id="miniThumb" src="" alt=""></div>
+    <div class="mini-meta">
+      <div id="miniTitle" class="mini-title">Nothing playing</div>
+      <div id="miniSub" class="mini-sub">—</div>
+    </div>
+    <div class="mini-controls">
+      <button id="miniPlay" class="mini-btn">▶</button>
+      <button id="miniClose" class="mini-close" title="Close">✕</button>
+    </div>
+  </div>
+
 <script>
 /* ====== CONFIG ====== */
 /* GANTI INI dengan API Key YouTube Data v3 kamu */
@@ -141,13 +162,20 @@ const nowArtist = $("nowArtist");
 const openYT = $("openYT");
 const progressBar = $("progressBar");
 
+const mini = $("mini");
+const miniThumb = $("miniThumb");
+const miniTitle = $("miniTitle");
+const miniSub = $("miniSub");
+const miniPlay = $("miniPlay");
+const miniClose = $("miniClose");
+
 let playlist = [];
 let currentIndex = -1;
 let playing = false;
 let iframeEl = null;
 let progressInterval = null;
 
-/* === YouTube Data helpers (search & details) === */
+/* YT Data helpers */
 async function ytSearch(q){
   const url = new URL("https://www.googleapis.com/youtube/v3/search");
   url.search = new URLSearchParams({ key: API_KEY, q, part: "snippet", maxResults: 12, type: "video" });
@@ -176,7 +204,7 @@ function extractId(s){
   }
 }
 
-/* ===== render results ===== */
+/* render results */
 function renderItems(items){
   resultsEl.innerHTML = "";
   if (!items || items.length === 0){
@@ -227,7 +255,7 @@ function attachPlayHandlers(){
 }
 function escapeHtml(s){ return String(s||"").replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
-/* ===== Player with iframe + postMessage control ===== */
+/* IFRAME + postMessage control */
 function ensureIframe(){
   if (iframeEl) return iframeEl;
   iframeEl = document.createElement("iframe");
@@ -236,26 +264,29 @@ function ensureIframe(){
   iframeEl.style.border = "0";
   iframeEl.allow = "autoplay; encrypted-media; fullscreen";
   iframeEl.id = "yt-player-iframe";
-  // put iframe into body (hidden area in page). Show small when playing.
   iframeEl.style.display = "none";
   document.body.appendChild(iframeEl);
   return iframeEl;
 }
-
 function setIframeSrcForVideo(vid, autoplay){
+  ensureIframe();
   const base = "https://www.youtube.com/embed/";
-  // enablejsapi=1 so we can send postMessage commands; origin param helps
   const origin = encodeURIComponent(location.origin);
   const src = `${base}${vid}?autoplay=${autoplay?1:0}&rel=0&playsinline=1&enablejsapi=1&origin=${origin}`;
-  ensureIframe().src = src;
-  // show small visible player area inside sidebar when playing
-  iframeEl.style.display = "block";
-  iframeEl.style.width = "100%";
-  iframeEl.style.height = "200px";
-  // if you prefer hidden playback, set style.display='none' instead
+  iframeEl.src = src;
+  iframeEl.style.display = autoplay ? "block" : "none";
+  // if playing show visible small player
+  if (autoplay) {
+    iframeEl.style.width = "320px";
+    iframeEl.style.height = "180px";
+    iframeEl.style.position = "fixed";
+    iframeEl.style.right = "14px";
+    iframeEl.style.bottom = "84px"; /* above mini */
+    iframeEl.style.zIndex = "99990";
+    iframeEl.style.borderRadius = "10px";
+    iframeEl.style.boxShadow = "0 20px 40px rgba(0,0,0,0.6)";
+  }
 }
-
-/* send command to iframe (requires enablejsapi=1) */
 function postCommand(cmd, args = []){
   if (!iframeEl || !iframeEl.contentWindow) return;
   try{
@@ -264,7 +295,7 @@ function postCommand(cmd, args = []){
   }catch(e){}
 }
 
-/* load / show track metadata */
+/* load & show data */
 function loadAtIndex(i){
   if (!playlist[i]) return;
   const it = playlist[i];
@@ -272,75 +303,62 @@ function loadAtIndex(i){
   nowTitle.textContent = it.title || "Untitled";
   nowArtist.textContent = it.channel || "";
   openYT.onclick = ()=>window.open(`https://www.youtube.com/watch?v=${it.id}`,'_blank');
-  // create iframe src but don't autoplay unless requested
+  // update mini
+  miniThumb.src = it.thumb || "";
+  miniTitle.textContent = it.title || "Untitled";
+  miniSub.textContent = it.channel || "";
+  // prepare iframe without autoplay
   setIframeSrcForVideo(it.id, false);
+  showMini(true);
 }
 
 /* play / pause / next / prev */
 function playTrack(){
   if (currentIndex === -1 || !playlist[currentIndex]) return alert("No track loaded");
-  // if iframe not loaded for current video, set with autoplay
   setIframeSrcForVideo(playlist[currentIndex].id, true);
+  // send play command after short delay to ensure iframe initialized
+  setTimeout(()=>postCommand("playVideo"), 600);
   playing = true;
   playBtn.textContent = "⏸";
-  startProgress(); // approximate
+  miniPlay.textContent = "⏸";
+  showMini(true);
+  startProgress();
 }
 function pauseTrack(){
-  // try to pause via postMessage command
   postCommand("pauseVideo");
   playing = false;
   playBtn.textContent = "▶";
+  miniPlay.textContent = "▶";
   stopProgress();
 }
 function togglePlay(){
-  if (!iframeEl) { playTrack(); return; }
-  if (!playing) {
-    // try to play (postMessage) — some browsers require user gesture; we attempt first
-    postCommand("playVideo");
-    playing = true;
-    playBtn.textContent = "⏸";
-    startProgress();
-  } else {
-    pauseTrack();
-  }
+  if (!playing) playTrack(); else pauseTrack();
 }
 function nextTrack(){
   if (currentIndex < playlist.length - 1){
     currentIndex++;
     loadAtIndex(currentIndex);
-    // autoplay after small delay so iframe is ready
-    setTimeout(()=>{ postCommand("playVideo"); playing = true; playBtn.textContent="⏸"; startProgress(); }, 600);
+    setTimeout(()=>postCommand("playVideo"),600);
+    playing=true; playBtn.textContent="⏸"; miniPlay.textContent="⏸"; startProgress();
   } else {
-    // no next: stop
-    playing = false;
-    playBtn.textContent = "▶";
-    stopProgress();
+    playing=false; playBtn.textContent="▶"; miniPlay.textContent="▶"; stopProgress();
   }
 }
 function prevTrack(){
-  if (currentIndex > 0){
-    currentIndex--;
-    loadAtIndex(currentIndex);
-    setTimeout(()=>{ postCommand("playVideo"); playing = true; playBtn.textContent="⏸"; startProgress(); }, 600);
-  } else {
-    // restart current
-    postCommand("seekTo", [0]);
-  }
+  if (currentIndex > 0){ currentIndex--; loadAtIndex(currentIndex); setTimeout(()=>postCommand("playVideo"),600); playing=true; playBtn.textContent="⏸"; miniPlay.textContent="⏸"; startProgress(); }
+  else { postCommand("seekTo", [0]); }
 }
 
-/* progress (approx): we cannot read cross-origin player time reliably without full API events,
-   but we can poll via postMessage request (not reliable). So keep simple: fake progress by CSS animation while playing. */
-function startProgress(){
-  stopProgress();
-  progressBar.style.width = "0%";
-  let t = 0;
-  progressInterval = setInterval(()=>{
-    t += 1;
-    const pct = Math.min(100, t/1.2); // approximate (will reach 100 after ~120s)
-    progressBar.style.width = pct + "%";
-  }, 1000);
-}
+/* progress: approximate visual */
+function startProgress(){ stopProgress(); progressBar.style.width="0%"; let t=0; progressInterval=setInterval(()=>{ t+=1; const pct=Math.min(100,(t/1.2)); progressBar.style.width=pct+"%"; },1000); }
 function stopProgress(){ if (progressInterval) clearInterval(progressInterval); }
+
+/* MINI UI */
+function showMini(v = true){ if (v) mini.classList.remove("hidden"); else mini.classList.add("hidden"); }
+miniPlay.onclick = ()=>{ if (playing) pauseTrack(); else togglePlay(); };
+miniClose.onclick = ()=>{ showMini(false); /* keep iframe running but hidden */ if (iframeEl) iframeEl.style.display='none'; } 
+// clicking mini opens main sidebar (scroll to top)
+mini.addEventListener("click", (e)=>{ if (e.target !== miniPlay && e.target !== miniClose){ window.scrollTo({top:0,behavior:'smooth'}); } });
 
 /* UI hooks */
 goBtn.onclick = async ()=>{
@@ -368,11 +386,12 @@ prevBtn.onclick = ()=>prevTrack();
 nextBtn.onclick = ()=>nextTrack();
 qEl.addEventListener("keydown", (e)=>{ if (e.key==='Enter') goBtn.click(); });
 
-/* listen to messages from iframe to detect state changes (optional) */
-window.addEventListener("message", (ev)=>{
-  // YouTube posts messages we could parse for state — many browsers include origin checks; keep light
-  // Not used heavily here; leaving listener in case future debugging needed.
-}, false);
+/* message listener (optional) */
+window.addEventListener("message",(ev)=>{ /* could parse player state messages here if needed */ }, false);
+
+/* initial demo (optional) */
+// qEl.value = "lofi hip hop live";
+// goBtn.click();
 </script>
 </body>
 </html>
