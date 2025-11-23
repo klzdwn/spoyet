@@ -12,8 +12,6 @@
     --muted:#97a1b5;
     --neon1:#00f5ff;
     --neon2:#7c4dff;
-    --accent:linear-gradient(90deg,var(--neon1),var(--neon2));
-    --glass:rgba(255,255,255,0.03);
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;background:radial-gradient(1200px 600px at 10% 10%, rgba(124,77,255,0.06), transparent), radial-gradient(800px 400px at 90% 90%, rgba(0,245,255,0.04), transparent), var(--bg); color:#e6f4ff; -webkit-font-smoothing:antialiased}
@@ -21,29 +19,19 @@
   header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
   .logo{display:flex;align-items:center;gap:10px}
   .mark{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#0ff,#7c4dff);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 30px rgba(124,77,255,0.12),0 2px 8px rgba(0,245,255,0.06)}
-  .mark svg{filter:drop-shadow(0 6px 12px rgba(0,245,255,0.08))}
   h1{font-size:18px;margin:0;letter-spacing:0.6px}
   p.lead{margin:2px 0 0;color:var(--muted);font-size:13px}
 
   .searchbar{display:flex;gap:10px;margin-top:14px}
-  .input{
-    flex:1;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    color:#dff6ff;font-size:15px;outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,0.02);
-  }
-  .btn{
-    background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px 14px;border-radius:12px;color:var(--neon1);font-weight:700;cursor:pointer;
-  }
+  .input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));color:#dff6ff;font-size:15px;outline:none}
+  .btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px 14px;border-radius:12px;color:var(--neon1);font-weight:700;cursor:pointer}
   .btn.primary{background:linear-gradient(90deg,#00f5ff33,#7c4dff33);border:1px solid rgba(255,255,255,0.04);color:#fff}
 
   .content{display:grid;grid-template-columns:1fr 360px;gap:16px;margin-top:18px}
   @media(max-width:980px){ .content{grid-template-columns:1fr} .sidebar{order:2} }
 
-  .panel{
-    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    border-radius:14px;padding:12px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(2,6,23,0.6)
-  }
+  .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:12px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(2,6,23,0.6)}
 
-  /* results */
   .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
   .card{display:flex;gap:12px;align-items:flex-start;padding:10px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));border:1px solid rgba(255,255,255,0.02)}
   .thumb{width:120px;height:70px;border-radius:8px; overflow:hidden;flex-shrink:0;box-shadow:0 6px 18px rgba(0,0,0,0.6)}
@@ -56,7 +44,6 @@
   .playBtn{background:linear-gradient(90deg,#00f5ff,#7c4dff);border:0;color:#051019;padding:8px 12px;border-radius:10px;font-weight:700;cursor:pointer}
   .linkBtn{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--neon1);padding:8px 10px;border-radius:10px}
 
-  /* sidebar / player */
   .sidebar .now{display:flex;gap:12px;align-items:center}
   .now .cover{width:86px;height:86px;border-radius:10px;overflow:hidden}
   .now .cover img{width:100%;height:100%;object-fit:cover}
@@ -69,32 +56,25 @@
   .progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#00f5ff,#7c4dff)}
 
   footer.small{margin-top:12px;color:var(--muted);font-size:12px}
-
-  /* fallback popup */
-  #yt-fallback {
-    position: fixed;
-    left: 14px;
-    right: 14px;
-    bottom: 18px;
-    z-index: 99999;
-    display:none;
-    background: #fff;
-    color:#111;
-    border-radius:12px;
-    padding:12px;
-    box-shadow:0 12px 40px rgba(0,0,0,0.45);
-    font-family:system-ui,Segoe UI,Roboto,Inter;
-  }
-  #yt-fallback .title{font-weight:700; margin-bottom:6px;font-size:16px}
-  #yt-fallback .hint{color:#555;margin-bottom:10px;font-size:13px}
-  #yt-fallback .row{display:flex;gap:8px;align-items:center}
-  .fb-btn{padding:8px 12px;border-radius:8px;border:0;cursor:pointer}
-  .fb-primary{background:linear-gradient(90deg,#00f5ff,#7c4dff);color:#051019}
-  .fb-ghost{background:transparent;border:1px solid rgba(0,0,0,0.08)}
-  .fb-close{background:transparent;border:0;color:#444}
-  /* subtle neon glow when hover */
   .card:hover{box-shadow:0 10px 30px rgba(124,77,255,0.06)}
-  .playBtn:active,.circle:active{transform:translateY(1px)}
+
+  /* MINI POPUP player */
+  .mini-player{
+    position:fixed;right:14px;bottom:14px;z-index:99999;
+    background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+    border:1px solid rgba(255,255,255,0.06);backdrop-filter:blur(6px);
+    padding:8px 10px;border-radius:14px;display:flex;gap:10px;align-items:center;min-width:220px;box-shadow:0 10px 40px rgba(0,0,0,0.6);
+  }
+  .mini-thumb{width:56px;height:40px;border-radius:6px;overflow:hidden;flex-shrink:0}
+  .mini-thumb img{width:100%;height:100%;object-fit:cover}
+  .mini-meta{flex:1;min-width:80px}
+  .mini-title{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mini-sub{font-size:12px;color:var(--muted);margin-top:4px}
+  .mini-controls{display:flex;gap:8px;align-items:center}
+  .mini-btn{width:40px;height:36px;border-radius:8px;border:0;background:linear-gradient(90deg,#00f5ff,#7c4dff);color:#051019;font-weight:800;cursor:pointer}
+  .mini-close{background:transparent;border:0;color:var(--muted);font-weight:800;cursor:pointer;padding:6px;border-radius:6px}
+  .mini-player.hidden{display:none}
+  @media(max-width:520px){ .mini-player{right:10px;bottom:10px;min-width:200px} .mini-title{max-width:100px} }
 </style>
 </head>
 <body>
@@ -120,9 +100,7 @@
 
     <div class="content">
       <main class="panel">
-        <div id="results" class="results">
-          <!-- search results go here -->
-        </div>
+        <div id="results" class="results"></div>
       </main>
 
       <aside class="sidebar panel">
@@ -151,28 +129,24 @@
     </div>
   </div>
 
-  <!-- hidden element for YT player -->
-  <div id="yt-player" style="display:none"></div>
-
-  <!-- fallback popup -->
-  <div id="yt-fallback" role="alert" aria-live="assertive">
-    <div class="title">Playback blocked — embed not allowed</div>
-    <div class="hint">Video ini tidak dapat diputar di halaman ini. Buka YouTube atau coba lagu lain.</div>
-    <div class="row">
-      <button id="fb-open" class="fb-btn fb-primary">Open in YouTube</button>
-      <button id="fb-next" class="fb-btn fb-ghost">Try next</button>
-      <button id="fb-close" class="fb-btn fb-close">Close</button>
+  <!-- MINI POPUP ELEMENT -->
+  <div id="mini" class="mini-player hidden" role="dialog" aria-label="mini player">
+    <div class="mini-thumb"><img id="miniThumb" src="" alt=""></div>
+    <div class="mini-meta">
+      <div id="miniTitle" class="mini-title">Nothing playing</div>
+      <div id="miniSub" class="mini-sub">—</div>
+    </div>
+    <div class="mini-controls">
+      <button id="miniPlay" class="mini-btn">▶</button>
+      <button id="miniClose" class="mini-close" title="Close">✕</button>
     </div>
   </div>
 
-  <!-- YouTube IFrame API -->
-  <script src="https://www.youtube.com/iframe_api"></script>
-
 <script>
-/* ========== CONFIG ========== */
-/* GANTI API_KEY DI BAWAH dengan YouTube Data API v3 key lo (opsional, pake kalo mau search) */
+/* ====== CONFIG ====== */
+/* GANTI INI dengan API Key YouTube Data v3 kamu */
 const API_KEY = "AIzaSyBle-EJDQ_3HzYcPwQRodGjKx3Lq4Ep0b8";
-/* ============================ */
+/* ==================== */
 
 const $ = id => document.getElementById(id);
 const resultsEl = $("results");
@@ -188,46 +162,37 @@ const nowArtist = $("nowArtist");
 const openYT = $("openYT");
 const progressBar = $("progressBar");
 
-const fbEl = $("yt-fallback");
-const fbOpen = $("fb-open");
-const fbNext = $("fb-next");
-const fbClose = $("fb-close");
+const mini = $("mini");
+const miniThumb = $("miniThumb");
+const miniTitle = $("miniTitle");
+const miniSub = $("miniSub");
+const miniPlay = $("miniPlay");
+const miniClose = $("miniClose");
 
-let playlist = []; // {id,title,channel,thumb}
+let playlist = [];
 let currentIndex = -1;
-let ytPlayer = null;
+let playing = false;
+let iframeEl = null;
 let progressInterval = null;
-let playerReady = false;
 
-/* ===== YouTube Data helpers ===== */
+/* YT Data helpers */
 async function ytSearch(q){
   const url = new URL("https://www.googleapis.com/youtube/v3/search");
-  url.search = new URLSearchParams({
-    key: API_KEY,
-    q,
-    part: "snippet",
-    maxResults: 12,
-    type: "video"
-  });
+  url.search = new URLSearchParams({ key: API_KEY, q, part: "snippet", maxResults: 12, type: "video" });
   const r = await fetch(url);
   if (!r.ok) throw new Error("YouTube API error: "+r.status);
   const j = await r.json();
   return j.items || [];
 }
-
-async function videoDetailsSingle(id){
+async function videoDetailsById(id){
   const url = new URL("https://www.googleapis.com/youtube/v3/videos");
-  url.search = new URLSearchParams({
-    key: API_KEY,
-    id,
-    part: "snippet,contentDetails"
-  });
+  url.search = new URLSearchParams({ key: API_KEY, id, part: "snippet,contentDetails" });
   const r = await fetch(url);
   if (!r.ok) throw new Error("Video details error: "+r.status);
   const j = await r.json();
-  return (j.items && j.items[0]) || null;
+  if (!j.items || !j.items.length) return null;
+  return { id: j.items[0].id, snippet: j.items[0].snippet };
 }
-
 function extractId(s){
   try{
     const u = new URL(s);
@@ -239,7 +204,7 @@ function extractId(s){
   }
 }
 
-/* ===== render results ===== */
+/* render results */
 function renderItems(items){
   resultsEl.innerHTML = "";
   if (!items || items.length === 0){
@@ -260,7 +225,7 @@ function renderItems(items){
         <div class="title">${escapeHtml(title)}</div>
         <div class="sub">${escapeHtml(channel)}</div>
         <div class="controls">
-          <button class="playBtn playBtnNeon" data-id="${vid}" data-thumb="${thumb}" data-title="${escapeHtml(title)}" data-channel="${escapeHtml(channel)}">Play</button>
+          <button class="playBtn" data-id="${vid}" data-thumb="${thumb}" data-title="${escapeHtml(title)}" data-channel="${escapeHtml(channel)}">Play</button>
           <a class="linkBtn" target="_blank" rel="noopener noreferrer" href="https://www.youtube.com/watch?v=${vid}">YouTube</a>
         </div>
       </div>
@@ -269,8 +234,6 @@ function renderItems(items){
   });
   attachPlayHandlers();
 }
-
-/* attach handlers */
 function attachPlayHandlers(){
   document.querySelectorAll(".playBtn").forEach(btn=>{
     btn.onclick = () => {
@@ -286,124 +249,116 @@ function attachPlayHandlers(){
         currentIndex = currentIndex+1;
       }
       loadAtIndex(currentIndex);
-      playVideo();
+      playTrack(); // user gesture => autoplay allowed
     };
   });
 }
-
-/* escape */
 function escapeHtml(s){ return String(s||"").replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
-/* ===== YouTube IFrame player integration ===== */
-/* onYouTubeIframeAPIReady must be global for YT API to call it */
-function onYouTubeIframeAPIReady(){
-  // attach to the hidden container with id 'yt-player'
-  ytPlayer = new YT.Player('yt-player', {
-    height: "0",
-    width: "0",
-    videoId: "",
-    playerVars: {playsinline: 1, rel: 0, modestbranding: 1},
-    events: { onReady: onPlayerReady, onStateChange: onStateChange, onError: onPlayerError }
-  });
-  // expose on window too (compat)
-  window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+/* IFRAME + postMessage control */
+function ensureIframe(){
+  if (iframeEl) return iframeEl;
+  iframeEl = document.createElement("iframe");
+  iframeEl.width = "480";
+  iframeEl.height = "270";
+  iframeEl.style.border = "0";
+  iframeEl.allow = "autoplay; encrypted-media; fullscreen";
+  iframeEl.id = "yt-player-iframe";
+  iframeEl.style.display = "none";
+  document.body.appendChild(iframeEl);
+  return iframeEl;
 }
-
-function onPlayerReady(){
-  playerReady = true;
-  // if playlist has something loaded already, ensure it's in player
-  if (currentIndex >= 0 && playlist[currentIndex]) {
-    try { ytPlayer.cueVideoById(playlist[currentIndex].id); } catch(e){}
+function setIframeSrcForVideo(vid, autoplay){
+  ensureIframe();
+  const base = "https://www.youtube.com/embed/";
+  const origin = encodeURIComponent(location.origin);
+  const src = `${base}${vid}?autoplay=${autoplay?1:0}&rel=0&playsinline=1&enablejsapi=1&origin=${origin}`;
+  iframeEl.src = src;
+  iframeEl.style.display = autoplay ? "block" : "none";
+  // if playing show visible small player
+  if (autoplay) {
+    iframeEl.style.width = "320px";
+    iframeEl.style.height = "180px";
+    iframeEl.style.position = "fixed";
+    iframeEl.style.right = "14px";
+    iframeEl.style.bottom = "84px"; /* above mini */
+    iframeEl.style.zIndex = "99990";
+    iframeEl.style.borderRadius = "10px";
+    iframeEl.style.boxShadow = "0 20px 40px rgba(0,0,0,0.6)";
   }
 }
-
-function onStateChange(e){
-  const st = e.data;
-  if (st === YT.PlayerState.ENDED){
-    nextTrack();
-  } else if (st === YT.PlayerState.PLAYING){
-    playBtn.textContent = "⏸";
-    startProgress();
-  } else if (st === YT.PlayerState.PAUSED){
-    playBtn.textContent = "▶";
-    stopProgress();
-  } else {
-    // buffering or unstarted
-  }
+function postCommand(cmd, args = []){
+  if (!iframeEl || !iframeEl.contentWindow) return;
+  try{
+    const msg = JSON.stringify({ event: "command", func: cmd, args });
+    iframeEl.contentWindow.postMessage(msg, "*");
+  }catch(e){}
 }
 
-function onPlayerError(e){
-  console.warn('YT Player error', e);
-  // show fallback popup with the current video id
-  const vid = (playlist[currentIndex] && playlist[currentIndex].id) || '';
-  showFallbackFor(vid);
-}
-
-/* load & control playlist */
+/* load & show data */
 function loadAtIndex(i){
   if (!playlist[i]) return;
   const it = playlist[i];
   nowThumb.src = it.thumb || "";
   nowTitle.textContent = it.title || "Untitled";
   nowArtist.textContent = it.channel || "";
-  openYT.onclick = ()=> window.open(`https://www.youtube.com/watch?v=${it.id}`, '_blank');
-
-  // load into player
-  if (ytPlayer && playerReady && typeof ytPlayer.loadVideoById === "function"){
-    try{
-      ytPlayer.loadVideoById(it.id);
-    }catch(e){
-      // fallback to cue
-      try { ytPlayer.cueVideoById(it.id); } catch(err){}
-    }
-  } else {
-    // player not ready yet, cue when ready
-    // attempt later
-    setTimeout(()=>{ if (ytPlayer && typeof ytPlayer.cueVideoById === 'function') ytPlayer.cueVideoById(it.id); },400);
-  }
+  openYT.onclick = ()=>window.open(`https://www.youtube.com/watch?v=${it.id}`,'_blank');
+  // update mini
+  miniThumb.src = it.thumb || "";
+  miniTitle.textContent = it.title || "Untitled";
+  miniSub.textContent = it.channel || "";
+  // prepare iframe without autoplay
+  setIframeSrcForVideo(it.id, false);
+  showMini(true);
 }
 
-/* playback controls */
-function playVideo(){
-  if (!ytPlayer || !playerReady) return alert("Player not ready");
-  const state = ytPlayer.getPlayerState ? ytPlayer.getPlayerState() : -1;
-  if (state === YT.PlayerState.PLAYING) ytPlayer.pauseVideo();
-  else ytPlayer.playVideo();
+/* play / pause / next / prev */
+function playTrack(){
+  if (currentIndex === -1 || !playlist[currentIndex]) return alert("No track loaded");
+  setIframeSrcForVideo(playlist[currentIndex].id, true);
+  // send play command after short delay to ensure iframe initialized
+  setTimeout(()=>postCommand("playVideo"), 600);
+  playing = true;
+  playBtn.textContent = "⏸";
+  miniPlay.textContent = "⏸";
+  showMini(true);
+  startProgress();
+}
+function pauseTrack(){
+  postCommand("pauseVideo");
+  playing = false;
+  playBtn.textContent = "▶";
+  miniPlay.textContent = "▶";
+  stopProgress();
+}
+function togglePlay(){
+  if (!playing) playTrack(); else pauseTrack();
 }
 function nextTrack(){
   if (currentIndex < playlist.length - 1){
     currentIndex++;
     loadAtIndex(currentIndex);
-    playVideo();
+    setTimeout(()=>postCommand("playVideo"),600);
+    playing=true; playBtn.textContent="⏸"; miniPlay.textContent="⏸"; startProgress();
   } else {
-    // no next track -> stop
-    try{ ytPlayer.stopVideo(); } catch(e){}
+    playing=false; playBtn.textContent="▶"; miniPlay.textContent="▶"; stopProgress();
   }
 }
 function prevTrack(){
-  if (!ytPlayer) return;
-  // if playing more than 3s, restart; otherwise go prev
-  try{
-    const pos = ytPlayer.getCurrentTime();
-    if (pos > 3) { ytPlayer.seekTo(0); } else if (currentIndex > 0) { currentIndex--; loadAtIndex(currentIndex); playVideo(); }
-  }catch(e){}
+  if (currentIndex > 0){ currentIndex--; loadAtIndex(currentIndex); setTimeout(()=>postCommand("playVideo"),600); playing=true; playBtn.textContent="⏸"; miniPlay.textContent="⏸"; startProgress(); }
+  else { postCommand("seekTo", [0]); }
 }
 
-/* progress bar */
-function startProgress(){
-  stopProgress();
-  progressInterval = setInterval(()=>{
-    try{
-      const dur = ytPlayer.getDuration();
-      const pos = ytPlayer.getCurrentTime();
-      if (dur && !isNaN(dur) && dur>0){
-        const pct = Math.max(0,Math.min(100,(pos/dur)*100));
-        progressBar.style.width = pct + "%";
-      }
-    }catch(e){}
-  },300);
-}
+/* progress: approximate visual */
+function startProgress(){ stopProgress(); progressBar.style.width="0%"; let t=0; progressInterval=setInterval(()=>{ t+=1; const pct=Math.min(100,(t/1.2)); progressBar.style.width=pct+"%"; },1000); }
 function stopProgress(){ if (progressInterval) clearInterval(progressInterval); }
+
+/* MINI UI */
+function showMini(v = true){ if (v) mini.classList.remove("hidden"); else mini.classList.add("hidden"); }
+miniPlay.onclick = ()=>{ if (playing) pauseTrack(); else togglePlay(); };
+miniClose.onclick = ()=>{ showMini(false); /* keep iframe running but hidden */ if (iframeEl) iframeEl.style.display='none'; } 
+// clicking mini opens main sidebar (scroll to top)
+mini.addEventListener("click", (e)=>{ if (e.target !== miniPlay && e.target !== miniClose){ window.scrollTo({top:0,behavior:'smooth'}); } });
 
 /* UI hooks */
 goBtn.onclick = async ()=>{
@@ -412,17 +367,12 @@ goBtn.onclick = async ()=>{
   try{
     const id = extractId(q);
     if (id){
-      const det = API_KEY ? await videoDetailsSingle(id) : null;
+      const det = await videoDetailsById(id);
       if (det) renderItems([det]);
-      else renderItems([{ id, snippet: { title: id, thumbnails: { default: { url: '' } }, channelTitle: '' } }]);
       return;
     }
     resultsEl.innerHTML = `<div style="padding:18px;color:var(--muted)">Searching…</div>`;
-    const items = API_KEY ? await ytSearch(q) : [];
-    if (!items.length && !API_KEY) {
-      resultsEl.innerHTML = `<div style="padding:18px;color:var(--muted)">You didn't set an API key — search disabled.</div>`;
-      return;
-    }
+    const items = await ytSearch(q);
     renderItems(items);
   }catch(err){
     console.error(err);
@@ -431,35 +381,17 @@ goBtn.onclick = async ()=>{
 };
 clearBtn.onclick = ()=>{ qEl.value=''; resultsEl.innerHTML=''; };
 
-playBtn.onclick = ()=>playVideo();
+playBtn.onclick = ()=>togglePlay();
 prevBtn.onclick = ()=>prevTrack();
 nextBtn.onclick = ()=>nextTrack();
 qEl.addEventListener("keydown", (e)=>{ if (e.key==='Enter') goBtn.click(); });
 
-/* ========== fallback popup functions ========== */
-function showFallbackFor(videoId){
-  fbOpen.onclick = ()=> window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
-  fbNext.onclick = ()=> { fbEl.style.display = 'none'; nextTrack(); };
-  fbClose.onclick = ()=> { fbEl.style.display = 'none'; };
-  fbEl.style.display = 'block';
-}
+/* message listener (optional) */
+window.addEventListener("message",(ev)=>{ /* could parse player state messages here if needed */ }, false);
 
-/* create player container if missing (safety) */
-(function ensurePlayerEl(){
-  if (!document.getElementById('yt-player')){
-    const div = document.createElement('div');
-    div.id = 'yt-player';
-    div.style.display = 'none';
-    document.body.appendChild(div);
-  }
-})();
-
-/* expose some functions globally for debug, if needed */
-window.nextTrack = nextTrack;
-window.prevTrack = prevTrack;
-window.playVideo = playVideo;
-window.showFallbackFor = showFallbackFor;
-
+/* initial demo (optional) */
+// qEl.value = "lofi hip hop live";
+// goBtn.click();
 </script>
 </body>
 </html>
