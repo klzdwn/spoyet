@@ -1,242 +1,394 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Mini YouTube Music Player</title>
-  <style>
-    :root{--bg:#0f1720;--card:#0b1220;--accent:#1db954;--muted:#9aa4b2;color-scheme:dark}
-    html,body{height:100%;margin:0;background:linear-gradient(180deg,#07121a 0,#071827 100%);font-family:Inter,Segoe UI,system-ui,Roboto,Arial}
-    .wrap{max-width:980px;margin:18px auto;padding:12px;}
-    header{display:flex;gap:12px;align-items:center;margin-bottom:12px}
-    h1{color:white;font-size:18px;margin:0}
-    .searchBox{flex:1;display:flex;gap:8px}
-    input[type="search"]{flex:1;padding:10px 12px;border-radius:10px;border:0;background:#0f1a24;color:#fff;outline:none;font-size:15px}
-    button{background:var(--accent);border:0;color:#fff;padding:10px 14px;border-radius:10px;font-weight:600}
-    .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:14px}
-    .card{background:#082028;border-radius:10px;padding:10px;color:#dfe9ef;display:flex;gap:8px;align-items:flex-start}
-    .thumb{width:120px;height:67px;background:#000;border-radius:6px;flex-shrink:0;overflow:hidden}
-    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-    .meta{flex:1;display:flex;flex-direction:column;gap:6px}
-    .title{font-size:14px;font-weight:600}
-    .sub{font-size:12px;color:var(--muted)}
-    .playerWrap{position:fixed;left:12px;right:12px;bottom:14px;background:linear-gradient(180deg, rgba(6,14,18,0.95), rgba(6,14,18,0.98));border-radius:12px;padding:10px;display:flex;gap:12px;align-items:center;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
-    .smallThumb{width:58px;height:58px;border-radius:8px;overflow:hidden}
-    .controls{display:flex;gap:10px;align-items:center}
-    .btn{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff;padding:8px 10px;border-radius:8px}
-    .volume{display:flex;gap:6px;align-items:center}
-    .muted{opacity:.6;font-size:12px;color:var(--muted)}
-    .hidden{display:none}
-    footer.note{color:var(--muted);font-size:12px;margin-top:10px}
-    @media(max-width:520px){ .thumb{width:110px;height:62px} }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>NeonTube — Dark Futuristic Music Player</title>
+<meta name="description" content="Dark neon YouTube music player — search & play full tracks. Single-file.">
+
+<style>
+  :root{
+    --bg:#05060a;
+    --panel:#071229;
+    --muted:#97a1b5;
+    --neon1:#00f5ff;
+    --neon2:#7c4dff;
+    --accent:linear-gradient(90deg,var(--neon1),var(--neon2));
+    --glass:rgba(255,255,255,0.03);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;background:radial-gradient(1200px 600px at 10% 10%, rgba(124,77,255,0.06), transparent), radial-gradient(800px 400px at 90% 90%, rgba(0,245,255,0.04), transparent), var(--bg); color:#e6f4ff; -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:18px auto;padding:14px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .logo{display:flex;align-items:center;gap:10px}
+  .mark{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#0ff,#7c4dff);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 30px rgba(124,77,255,0.12),0 2px 8px rgba(0,245,255,0.06)}
+  .mark svg{filter:drop-shadow(0 6px 12px rgba(0,245,255,0.08))}
+  h1{font-size:18px;margin:0;letter-spacing:0.6px}
+  p.lead{margin:2px 0 0;color:var(--muted);font-size:13px}
+
+  .searchbar{display:flex;gap:10px;margin-top:14px}
+  .input{
+    flex:1;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    color:#dff6ff;font-size:15px;outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,0.02);
+  }
+  .btn{
+    background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px 14px;border-radius:12px;color:var(--neon1);font-weight:700;cursor:pointer;
+  }
+  .btn.primary{background:linear-gradient(90deg,#00f5ff33,#7c4dff33);border:1px solid rgba(255,255,255,0.04);color:#fff}
+
+  .content{display:grid;grid-template-columns:1fr 360px;gap:16px;margin-top:18px}
+  @media(max-width:980px){ .content{grid-template-columns:1fr} .sidebar{order:2} }
+
+  .panel{
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:14px;padding:12px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(2,6,23,0.6)
+  }
+
+  /* results */
+  .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+  .card{display:flex;gap:12px;align-items:flex-start;padding:10px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));border:1px solid rgba(255,255,255,0.02)}
+  .thumb{width:120px;height:70px;border-radius:8px; overflow:hidden;flex-shrink:0;box-shadow:0 6px 18px rgba(0,0,0,0.6)}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .meta{flex:1}
+  .title{font-weight:700;margin:0;color:#fff;font-size:14px}
+  .sub{font-size:12px;color:var(--muted);margin-top:6px}
+  .controls{margin-top:10px;display:flex;gap:8px;align-items:center}
+
+  .playBtn{background:linear-gradient(90deg,#00f5ff,#7c4dff);border:0;color:#051019;padding:8px 12px;border-radius:10px;font-weight:700;cursor:pointer}
+  .linkBtn{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--neon1);padding:8px 10px;border-radius:10px}
+
+  /* sidebar / player */
+  .sidebar .now{display:flex;gap:12px;align-items:center}
+  .now .cover{width:86px;height:86px;border-radius:10px;overflow:hidden}
+  .now .cover img{width:100%;height:100%;object-fit:cover}
+  .now .track{flex:1}
+  .now .track .t{font-weight:800;font-size:15px}
+  .now .track .a{color:var(--muted);font-size:13px;margin-top:6px}
+  .big-controls{display:flex;gap:8px;align-items:center;margin-top:12px}
+  .circle{width:44px;height:44px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(90deg,#0ff,#7c4dff);color:#051019;font-weight:800;cursor:pointer}
+  .progress{height:6px;background:rgba(255,255,255,0.03);border-radius:8px;margin-top:12px;overflow:hidden}
+  .progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#00f5ff,#7c4dff)}
+
+  footer.small{margin-top:12px;color:var(--muted);font-size:12px}
+
+  /* subtle neon glow when hover */
+  .card:hover{box-shadow:0 10px 30px rgba(124,77,255,0.06)}
+  .playBtn:active,.circle:active{transform:translateY(1px)}
+</style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>YouTube Music (Full) — Minimal</h1>
-      <div class="searchBox">
-        <input id="q" type="search" placeholder="Search songs or paste YouTube link (e.g. bad guy billie eilish)" />
-        <button id="go">Search</button>
+      <div class="logo">
+        <div class="mark" aria-hidden="true">
+          <!-- lightning/music icon -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2v10" stroke="#04121a" stroke-width="1.6" stroke-linecap="round"/><path d="M6 12l6-6 6 6" stroke="#04121a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <h1>NeonTube</h1>
+          <p class="lead">Dark Neon YouTube Music — full tracks</p>
+        </div>
       </div>
+      <div style="margin-left:auto;color:var(--muted);font-size:13px">No backend • Single file • YouTube</div>
     </header>
 
-    <div id="results" class="results"></div>
-
-    <p class="note">Catatan: pemutaran via YouTube. Untuk search butuh <strong>YouTube Data API key</strong>. Lihat instruksi di bawah.</p>
-
-    <div id="player" class="playerWrap hidden">
-      <div class="smallThumb" id="pthumb"><img src="" alt=""></div>
-      <div style="flex:1">
-        <div id="ptitle" style="font-weight:700;color:#fff"></div>
-        <div style="font-size:12px;color:var(--muted)" id="pchannel"></div>
-      </div>
-      <div class="controls">
-        <button class="btn" id="prev">⏮</button>
-        <button class="btn" id="play">▶️</button>
-        <button class="btn" id="next">⏭</button>
-      </div>
+    <div class="searchbar">
+      <input id="q" class="input" type="search" placeholder="Search songs, artists or paste a YouTube link (e.g. bad guy billie eilish)" />
+      <button id="go" class="btn primary">Search</button>
+      <button id="clear" class="btn">Clear</button>
     </div>
 
-    <footer class="note">
-      - API Key diperlukan: ganti `YOUR_API_KEY` di bawah. • Quota YouTube berlaku. • Jangan hapus file, buka langsung atau host di GitHub Pages.
-    </footer>
+    <div class="content">
+      <main class="panel">
+        <div id="results" class="results">
+          <!-- search results go here -->
+        </div>
+      </main>
+
+      <aside class="sidebar panel">
+        <div class="now">
+          <div class="cover"><img id="nowThumb" src="" alt=""></div>
+          <div class="track">
+            <div class="t" id="nowTitle">Nothing playing</div>
+            <div class="a" id="nowArtist">—</div>
+          </div>
+        </div>
+
+        <div class="big-controls">
+          <div id="prev" class="circle">⏮</div>
+          <div id="play" class="circle">▶</div>
+          <div id="next" class="circle">⏭</div>
+        </div>
+
+        <div class="progress"><i id="progressBar"></i></div>
+
+        <div style="margin-top:10px">
+          <button id="openYT" class="linkBtn" style="width:100%">Open in YouTube</button>
+        </div>
+
+        <footer class="small">Tip: tap a result's Play to load. Use the YouTube controls if playback blocked by browser autoplay policy.</footer>
+      </aside>
+    </div>
   </div>
 
   <!-- YouTube IFrame API -->
   <script src="https://www.youtube.com/iframe_api"></script>
 
-  <script>
-    // ====== GANTI API KEY DI SINI ======
-    const API_KEY = "YOUR_API_KEY";
-    // ===================================
+<script>
+/* ================== CONFIG ================== */
+/* GANTI API KEY DISINI dengan YouTube Data API v3 key */
+const API_KEY = "AIzaSyBle-EJDQ_3HzYcPwQRodGjKx3Lq4Ep0b8";
+/* ============================================ */
 
-    // YouTube Data API endpoints
-    const searchApi = async (q) => {
-      const url = new URL("https://www.googleapis.com/youtube/v3/search");
-      url.search = new URLSearchParams({
-        key: API_KEY,
-        q,
-        part: "snippet",
-        maxResults: 12,
-        type: "video",
-      }).toString();
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("YouTube search error: " + res.status);
-      const j = await res.json();
-      return j.items || [];
+if (!API_KEY || API_KEY === "AIzaSyBle-EJDQ_3HzYcPwQRodGjKx3Lq4Ep0b8") {
+  console.warn("YouTube API key missing. Replace API_KEY in the HTML.");
+}
+
+/* helpers */
+const $ = id => document.getElementById(id);
+const resultsEl = $("results");
+const qEl = $("q");
+const goBtn = $("go");
+const clearBtn = $("clear");
+const playBtn = $("play");
+const prevBtn = $("prev");
+const nextBtn = $("next");
+const nowThumb = $("nowThumb");
+const nowTitle = $("nowTitle");
+const nowArtist = $("nowArtist");
+const openYT = $("openYT");
+const progressBar = $("progressBar");
+
+let playlist = []; // array of {id, title, channel, thumb}
+let currentIndex = -1;
+let ytPlayer;
+let progressInterval;
+
+/* ===== YouTube Data helpers ===== */
+async function ytSearch(q){
+  const url = new URL("https://www.googleapis.com/youtube/v3/search");
+  url.search = new URLSearchParams({
+    key: API_KEY,
+    q,
+    part: "snippet",
+    maxResults: 12,
+    type: "video"
+  });
+  const r = await fetch(url);
+  if (!r.ok) throw new Error("YouTube API error: "+r.status);
+  const j = await r.json();
+  return j.items || [];
+}
+
+async function videoDetails(id){
+  const url = new URL("https://www.googleapis.com/youtube/v3/videos");
+  url.search = new URLSearchParams({
+    key: API_KEY,
+    id,
+    part: "snippet,contentDetails"
+  });
+  const r = await fetch(url);
+  if (!r.ok) throw new Error("Video details error: "+r.status);
+  const j = await r.json();
+  return (j.items && j.items[0]) || null;
+}
+
+function extractId(s){
+  try{
+    const u = new URL(s);
+    if (u.hostname.includes("youtu.be")) return u.pathname.slice(1);
+    if (u.searchParams.get("v")) return u.searchParams.get("v");
+    return null;
+  }catch(e){
+    return null;
+  }
+}
+
+/* ===== render results ===== */
+function renderItems(items){
+  resultsEl.innerHTML = "";
+  if (!items || items.length === 0){
+    resultsEl.innerHTML = `<div style="padding:18px;color:var(--muted)">No results</div>`;
+    return;
+  }
+  items.forEach(it=>{
+    const vid = it.id?.videoId || it.id;
+    const snip = it.snippet || it;
+    const thumb = (snip.thumbnails && (snip.thumbnails.mqdefault?.url || snip.thumbnails.default?.url)) || "";
+    const title = snip.title || (it.title || "Untitled");
+    const channel = snip.channelTitle || (it.channelTitle||"");
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="thumb"><img src="${thumb}" alt=""></div>
+      <div class="meta">
+        <div class="title">${escapeHtml(title)}</div>
+        <div class="sub">${escapeHtml(channel)}</div>
+        <div class="controls">
+          <button class="playBtn playBtnNeon" data-id="${vid}" data-thumb="${thumb}" data-title="${escapeHtml(title)}" data-channel="${escapeHtml(channel)}">Play</button>
+          <a class="linkBtn" target="_blank" rel="noopener noreferrer" href="https://www.youtube.com/watch?v=${vid}">YouTube</a>
+        </div>
+      </div>
+    `;
+    resultsEl.appendChild(card);
+  });
+  attachPlayHandlers();
+}
+
+/* attach handlers */
+function attachPlayHandlers(){
+  document.querySelectorAll(".playBtn").forEach(btn=>{
+    btn.onclick = () => {
+      const id = btn.dataset.id;
+      const thumb = btn.dataset.thumb;
+      const title = btn.dataset.title;
+      const channel = btn.dataset.channel;
+      // insert into playlist right after currentIndex
+      if (currentIndex === -1){
+        playlist = [{id,title,channel,thumb}];
+        currentIndex = 0;
+      } else {
+        playlist.splice(currentIndex+1,0,{id,title,channel,thumb});
+        currentIndex = currentIndex+1;
+      }
+      loadAtIndex(currentIndex);
+      playVideo();
     };
+  });
+}
 
-    // Helpers
-    const el = id => document.getElementById(id);
+/* escape */
+function escapeHtml(s){ return String(s||"").replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
-    // render results
-    async function doSearch(q) {
-      const resultsEl = el("results");
-      resultsEl.innerHTML = "<div style='color:var(--muted);padding:10px'>Searching…</div>";
-      try {
-        // if user pasted a YouTube URL, extract ID quickly
-        const urlId = extractYoutubeID(q);
-        let items;
-        if (urlId) {
-          // fetch video details via videos API
-          const vurl = new URL("https://www.googleapis.com/youtube/v3/videos");
-          vurl.search = new URLSearchParams({ key: API_KEY, id: urlId, part: "snippet,contentDetails" }).toString();
-          const rv = await fetch(vurl);
-          const jv = await rv.json();
-          items = jv.items || [];
-        } else {
-          items = await searchApi(q);
-        }
+/* ===== YouTube IFrame player integration ===== */
+function onYouTubeIframeAPIReady(){
+  ytPlayer = new YT.Player(document.createElement("div"),{
+    height:"0",width:"0",videoId:"",playerVars:{playsinline:1,rel:0,modestbranding:1},
+    events:{onStateChange:onStateChange, onError:onPlayerError}
+  });
+}
 
-        if (!items.length) {
-          resultsEl.innerHTML = "<div style='color:var(--muted);padding:10px'>No results</div>";
-          return;
-        }
+function onStateChange(e){
+  const st = e.data;
+  if (st === YT.PlayerState.ENDED){
+    nextTrack();
+  } else if (st === YT.PlayerState.PLAYING){
+    playBtn.textContent = "⏸";
+    startProgress();
+  } else {
+    playBtn.textContent = "▶";
+    stopProgress();
+  }
+}
 
-        resultsEl.innerHTML = "";
-        for (const it of items) {
-          const id = it.id?.videoId || it.id;
-          const snip = it.snippet;
-          const card = document.createElement("div");
-          card.className = "card";
-          card.innerHTML = `
-            <div class="thumb"><img src="${snip.thumbnails?.mqdefault?.url || snip.thumbnails?.default?.url}" alt=""></div>
-            <div class="meta">
-              <div class="title">${escapeHtml(snip.title)}</div>
-              <div class="sub">${escapeHtml(snip.channelTitle)}</div>
-              <div style="margin-top:auto"><button data-id="${id}" data-thumb="${snip.thumbnails?.mqdefault?.url}" class="btn playBtn">Play</button></div>
-            </div>
-          `;
-          resultsEl.appendChild(card);
-        }
-        attachPlay();
-      } catch (err) {
-        resultsEl.innerHTML = `<div style='color:tomato;padding:10px'>Error: ${escapeHtml(err.message)}</div>`;
-        console.error(err);
+function onPlayerError(e){
+  console.error("YT Player error", e);
+  alert("Playback error. Try another track.");
+  nextTrack();
+}
+
+/* load & control playlist */
+function loadAtIndex(i){
+  if (!playlist[i]) return;
+  const it = playlist[i];
+  nowThumb.src = it.thumb || "";
+  nowTitle.textContent = it.title || "Untitled";
+  nowArtist.textContent = it.channel || "";
+  openYT.onclick = ()=>window.open(`https://www.youtube.com/watch?v=${it.id}`,'_blank');
+  // load into player but do not play automatically until playVideo is called
+  if (ytPlayer && typeof ytPlayer.loadVideoById === "function"){
+    ytPlayer.loadVideoById(it.id);
+  } else {
+    // try later when player ready
+    setTimeout(()=>{ if (ytPlayer) ytPlayer.loadVideoById(it.id); },500);
+  }
+}
+
+/* playback controls */
+function playVideo(){
+  if (!ytPlayer) return alert("Player not ready");
+  const state = ytPlayer.getPlayerState ? ytPlayer.getPlayerState() : -1;
+  if (state === YT.PlayerState.PLAYING) ytPlayer.pauseVideo();
+  else ytPlayer.playVideo();
+}
+function pauseVideo(){ if (ytPlayer) ytPlayer.pauseVideo(); }
+function nextTrack(){ if (currentIndex < playlist.length - 1){ currentIndex++; loadAtIndex(currentIndex); playVideo(); } else { // end of list
+  // stop playback
+  if (ytPlayer) ytPlayer.stopVideo();
+  }
+}
+function prevTrack(){ if (ytPlayer) ytPlayer.seekTo(0); }
+
+/* progress bar */
+function startProgress(){
+  stopProgress();
+  progressInterval = setInterval(()=>{
+    try{
+      const dur = ytPlayer.getDuration();
+      const pos = ytPlayer.getCurrentTime();
+      if (dur && !isNaN(dur) && dur>0){
+        const pct = Math.max(0,Math.min(100,(pos/dur)*100));
+        progressBar.style.width = pct + "%";
       }
+    }catch(e){}
+  },300);
+}
+function stopProgress(){ if (progressInterval) clearInterval(progressInterval); }
+
+/* UI hooks */
+goBtn.onclick = async ()=>{
+  const q = qEl.value.trim();
+  if (!q) return;
+  try{
+    // check if youtube url
+    const id = extractId(q);
+    if (id){
+      const det = await videoDetails(id);
+      if (det) renderItems([det]);
+      return;
     }
+    resultsEl.innerHTML = `<div style="padding:18px;color:var(--muted)">Searching…</div>`;
+    const items = await ytSearch(q);
+    renderItems(items);
+  }catch(err){
+    console.error(err);
+    resultsEl.innerHTML = `<div style="padding:18px;color:tomato">Error: ${escapeHtml(err.message)}</div>`;
+  }
+};
+clearBtn.onclick = ()=>{ qEl.value=''; resultsEl.innerHTML=''; };
 
-    function attachPlay() {
-      const btns = document.querySelectorAll(".playBtn");
-      btns.forEach(b=>{
-        b.onclick = () => {
-          const id = b.dataset.id;
-          const thumb = b.dataset.thumb;
-          playVideo(id, thumb, b.closest(".card").querySelector(".title").textContent, b.closest(".card").querySelector(".sub").textContent);
-        };
-      });
-    }
+playBtn.onclick = ()=>playVideo();
+prevBtn.onclick = ()=>prevTrack();
+nextBtn.onclick = ()=>nextTrack();
 
-    // minimal safe escape
-    function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+/* keyboard enter */
+qEl.addEventListener("keydown", (e)=>{ if (e.key==='Enter') goBtn.click(); });
 
-    // extract youtube id from link or return null
-    function extractYoutubeID(s){
-      try{
-        const url = new URL(s);
-        if (url.hostname.includes("youtu.be")) return url.pathname.slice(1);
-        if (url.searchParams.get("v")) return url.searchParams.get("v");
-        return null;
-      }catch(e){
-        return null;
-      }
-    }
+/* initial demo (optional) */
+// qEl.value = "lofi hip hop live";
+// goBtn.click();
 
-    // Player logic using IFrame API
-    let player;
-    function onYouTubeIframeAPIReady() {
-      player = new YT.Player("ytplayer", {
-        height: "0", width: "0", videoId: "", playerVars: {
-          playsinline: 1,
-          origin: location.origin,
-          rel: 0,
-          modestbranding: 1
-        },
-        events: {
-          onReady: () => {},
-          onStateChange: onPlayerStateChange
-        }
-      });
-    }
+/* expose videoDetails in global scope for internal use */
+async function videoDetails(id){
+  const url = new URL("https://www.googleapis.com/youtube/v3/videos");
+  url.search = new URLSearchParams({ key: API_KEY, id, part: "snippet,contentDetails" });
+  const r = await fetch(url);
+  if (!r.ok) throw new Error("Video details error: "+r.status);
+  const j = await r.json();
+  // map to same shape as search results
+  if (!j.items || !j.items.length) return null;
+  return { id: j.items[0].id, snippet: j.items[0].snippet };
+}
 
-    // Create hidden iframe container required by API
-    const ifr = document.createElement("div");
-    ifr.id = "ytplayer";
-    ifr.style.display = "none";
-    document.body.appendChild(ifr);
+/* fallback safety: create player DOM element (YT API requires an element) */
+(function createHiddenPlayerEl(){
+  const div = document.createElement("div");
+  div.id = "yt-hidden-player";
+  div.style.display = "none";
+  document.body.appendChild(div);
+})();
 
-    function onPlayerStateChange(e){
-      const st = e.data;
-      const playBtn = el("play");
-      if(st === YT.PlayerState.PLAYING) playBtn.textContent = "⏸";
-      else playBtn.textContent = "▶️";
-    }
-
-    function playVideo(id, thumb, title, channel){
-      if(!player) return alert("Player belum siap. Tunggu beberapa detik lalu coba lagi.");
-      player.loadVideoById(id);
-      // show player UI
-      el("player").classList.remove("hidden");
-      el("pthumb").querySelector("img").src = thumb;
-      el("ptitle").textContent = title;
-      el("pchannel").textContent = channel;
-      // set up prev/next minimal (not implemented full playlist here)
-      currentVideoId = id;
-    }
-
-    // simple controls
-    let currentVideoId = null;
-    document.addEventListener("click", (ev)=>{
-      if(ev.target.matches("#go")){
-        const q = el("q").value.trim();
-        if(!q) return;
-        doSearch(q);
-      }
-      if(ev.target.matches("#play")){
-        if(!player) return;
-        const state = player.getPlayerState();
-        if(state === YT.PlayerState.PLAYING) player.pauseVideo();
-        else player.playVideo();
-      }
-      if(ev.target.matches("#prev")) { player.seekTo(0); }
-      if(ev.target.matches("#next")) { player.stopVideo(); }
-    });
-
-    // allow Enter to search
-    el("q").addEventListener("keydown", (e)=>{
-      if(e.key === "Enter") el("go").click();
-    });
-
-    // initialize: small demo search
-    window.addEventListener("load", ()=> {
-      // optional: prefill a sample
-      // el("q").value = "Billie Eilish bad guy";
-      // doSearch(el("q").value);
-    });
-
-    // The script relies on the global YT object created by the IFrame API.
-    // If API not loaded yet, the onYouTubeIframeAPIReady() callback will create the player.
-  </script>
+/* End of script */
+</script>
 </body>
 </html>
