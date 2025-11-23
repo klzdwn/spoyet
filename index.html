@@ -1,223 +1,242 @@
 <!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Spotify Preview — Simple</title>
+  <title>Mini YouTube Music Player</title>
   <style>
-    :root{
-      --bg:#f7fbff; --card:#ffffff; --muted:#667085; --accent:#0b84ff;
-    }
-    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
-    body{background:linear-gradient(180deg,#f0f7ff 0%,var(--bg) 100%);color:#0b1b2b;padding:18px;}
-    .wrap{max-width:900px;margin:14px auto;}
-    h1{margin:0 0 8px;font-size:26px;}
-    p.hint{margin:0 0 18px;color:var(--muted);}
-    .row{display:flex;gap:8px;align-items:center;margin-bottom:12px;}
-    input.search{flex:1;padding:12px;border-radius:10px;border:1px solid #e6eef9;background:white;box-shadow:inset 0 1px 0 rgba(12,34,56,0.02);font-size:16px;}
-    button.btn{padding:10px 14px;border-radius:10px;border:0;background:var(--accent);color:white;font-weight:600;cursor:pointer;}
-    button.ghost{background:transparent;border:1px solid #dbeafe;color:var(--accent);}
-    .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:12px;}
-    .card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(12,34,56,0.06);display:flex;gap:10px;align-items:center;}
-    .cover{width:64px;height:64px;background:#eee;border-radius:6px;flex:0 0 64px;object-fit:cover;}
-    .meta{flex:1;}
-    .title{font-weight:700;margin:0 0 6px;font-size:15px;}
-    .sub{margin:0;color:var(--muted);font-size:13px;}
-    .controls{display:flex;gap:8px;align-items:center;margin-left:8px;}
-    .audio-btn{background:#0b84ff;color:white;border-radius:999px;padding:8px 12px;border:0;cursor:pointer;font-weight:600;}
-    small.note{display:block;margin-top:18px;color:var(--muted);}
-    .nores{padding:22px;border-radius:10px;background:#fff;text-align:center;color:var(--muted);box-shadow:0 6px 18px rgba(12,34,56,0.02);}
-    a.link{color:var(--accent);text-decoration:none;border:1px dashed transparent;padding:6px;border-radius:8px;font-size:13px;}
-    footer{margin-top:22px;color:var(--muted);font-size:13px}
+    :root{--bg:#0f1720;--card:#0b1220;--accent:#1db954;--muted:#9aa4b2;color-scheme:dark}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#07121a 0,#071827 100%);font-family:Inter,Segoe UI,system-ui,Roboto,Arial}
+    .wrap{max-width:980px;margin:18px auto;padding:12px;}
+    header{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+    h1{color:white;font-size:18px;margin:0}
+    .searchBox{flex:1;display:flex;gap:8px}
+    input[type="search"]{flex:1;padding:10px 12px;border-radius:10px;border:0;background:#0f1a24;color:#fff;outline:none;font-size:15px}
+    button{background:var(--accent);border:0;color:#fff;padding:10px 14px;border-radius:10px;font-weight:600}
+    .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:14px}
+    .card{background:#082028;border-radius:10px;padding:10px;color:#dfe9ef;display:flex;gap:8px;align-items:flex-start}
+    .thumb{width:120px;height:67px;background:#000;border-radius:6px;flex-shrink:0;overflow:hidden}
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .meta{flex:1;display:flex;flex-direction:column;gap:6px}
+    .title{font-size:14px;font-weight:600}
+    .sub{font-size:12px;color:var(--muted)}
+    .playerWrap{position:fixed;left:12px;right:12px;bottom:14px;background:linear-gradient(180deg, rgba(6,14,18,0.95), rgba(6,14,18,0.98));border-radius:12px;padding:10px;display:flex;gap:12px;align-items:center;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+    .smallThumb{width:58px;height:58px;border-radius:8px;overflow:hidden}
+    .controls{display:flex;gap:10px;align-items:center}
+    .btn{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff;padding:8px 10px;border-radius:8px}
+    .volume{display:flex;gap:6px;align-items:center}
+    .muted{opacity:.6;font-size:12px;color:var(--muted)}
+    .hidden{display:none}
+    footer.note{color:var(--muted);font-size:12px;margin-top:10px}
+    @media(max-width:520px){ .thumb{width:110px;height:62px} }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>Music Preview</h1>
-    <p class="hint">Preview 30s dari Spotify (legal). Isi <code>BASE_URL</code> di bawah jika backend kamu bukan <code>http://localhost:3000</code>.</p>
+    <header>
+      <h1>YouTube Music (Full) — Minimal</h1>
+      <div class="searchBox">
+        <input id="q" type="search" placeholder="Search songs or paste YouTube link (e.g. bad guy billie eilish)" />
+        <button id="go">Search</button>
+      </div>
+    </header>
 
-    <div class="row">
-      <input id="q" class="search" placeholder="Cari artis, judul, album..." />
-      <button id="searchBtn" class="btn">Search</button>
-      <button id="darkBtn" class="ghost">Dark</button>
+    <div id="results" class="results"></div>
+
+    <p class="note">Catatan: pemutaran via YouTube. Untuk search butuh <strong>YouTube Data API key</strong>. Lihat instruksi di bawah.</p>
+
+    <div id="player" class="playerWrap hidden">
+      <div class="smallThumb" id="pthumb"><img src="" alt=""></div>
+      <div style="flex:1">
+        <div id="ptitle" style="font-weight:700;color:#fff"></div>
+        <div style="font-size:12px;color:var(--muted)" id="pchannel"></div>
+      </div>
+      <div class="controls">
+        <button class="btn" id="prev">⏮</button>
+        <button class="btn" id="play">▶️</button>
+        <button class="btn" id="next">⏭</button>
+      </div>
     </div>
 
-    <div id="info" class="nores">Masukkan kata kunci lalu tekan Search.</div>
-    <div id="results" class="list" style="display:none"></div>
-
-    <small class="note">Catatan: preview cuma 30 detik jika tersedia di Spotify. Jika preview tidak ada, track tidak bisa diputar.</small>
-    <footer>Backend: <span id="backendInfo">localhost:3000</span></footer>
+    <footer class="note">
+      - API Key diperlukan: ganti `YOUR_API_KEY` di bawah. • Quota YouTube berlaku. • Jangan hapus file, buka langsung atau host di GitHub Pages.
+    </footer>
   </div>
 
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+
   <script>
-    // CONFIG:
-    // jika backend kamu di ngrok atau localtunnel, ubah BASE_URL ke URL publik (contoh "https://xxxxx.ngrok.io")
-    const BASE_URL = (() => {
-      // default: localhost
-      return (window.__BASE_URL__ || "http://127.0.0.1:3000").replace(/\/$/, "");
-    })();
+    // ====== GANTI API KEY DI SINI ======
+    const API_KEY = "YOUR_API_KEY";
+    // ===================================
 
-    document.getElementById('backendInfo').textContent = BASE_URL;
+    // YouTube Data API endpoints
+    const searchApi = async (q) => {
+      const url = new URL("https://www.googleapis.com/youtube/v3/search");
+      url.search = new URLSearchParams({
+        key: API_KEY,
+        q,
+        part: "snippet",
+        maxResults: 12,
+        type: "video",
+      }).toString();
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("YouTube search error: " + res.status);
+      const j = await res.json();
+      return j.items || [];
+    };
 
-    const qInput = document.getElementById('q');
-    const searchBtn = document.getElementById('searchBtn');
-    const resultsEl = document.getElementById('results');
-    const infoEl = document.getElementById('info');
-    const darkBtn = document.getElementById('darkBtn');
+    // Helpers
+    const el = id => document.getElementById(id);
 
-    let currentAudio = null;
-    let currentPlayingId = null;
-
-    async function apiRequest(path) {
-      const res = await fetch(BASE_URL + path);
-      if (!res.ok) throw new Error("Server error: " + res.status);
-      return res.json();
-    }
-
-    async function doSearch() {
-      const q = qInput.value.trim();
-      if (!q) { infoEl.style.display = ""; infoEl.textContent = "Masukkan kata kunci dulu."; resultsEl.style.display = "none"; return; }
-      infoEl.style.display = ""; infoEl.textContent = "Loading…";
-      resultsEl.style.display = "none";
+    // render results
+    async function doSearch(q) {
+      const resultsEl = el("results");
+      resultsEl.innerHTML = "<div style='color:var(--muted);padding:10px'>Searching…</div>";
       try {
-        const data = await apiRequest(`/api/search?q=${encodeURIComponent(q)}`);
-        renderResults(data.tracks || []);
-      } catch (e) {
-        console.error(e);
-        infoEl.style.display = ""; infoEl.textContent = "Gagal connect ke backend. Pastikan backend running dan CORS diaktifkan.";
-        resultsEl.style.display = "none";
-      }
-    }
-
-    function renderResults(items) {
-      resultsEl.innerHTML = "";
-      if (!items || items.length === 0) {
-        infoEl.style.display = ""; infoEl.textContent = "No results found";
-        resultsEl.style.display = "none";
-        return;
-      }
-      infoEl.style.display = "none";
-      resultsEl.style.display = "";
-
-      items.forEach((t) => {
-        const card = document.createElement('div');
-        card.className = 'card';
-
-        const img = document.createElement('img');
-        img.className = 'cover';
-        img.src = t.image || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"></svg>';
-        img.alt = t.name;
-
-        const meta = document.createElement('div');
-        meta.className = 'meta';
-        const title = document.createElement('div');
-        title.className = 'title';
-        title.textContent = t.name;
-        const sub = document.createElement('div');
-        sub.className = 'sub';
-        sub.textContent = (t.artists || []).join(', ');
-
-        meta.appendChild(title);
-        meta.appendChild(sub);
-
-        const ctr = document.createElement('div');
-        ctr.className = 'controls';
-
-        const play = document.createElement('button');
-        play.className = 'audio-btn';
-        play.textContent = 'Play';
-        play.onclick = (ev) => togglePlay(t, play);
-
-        const open = document.createElement('a');
-        open.className = 'link';
-        open.textContent = 'Open Spotify';
-        open.href = t.external_url || '#';
-        open.target = '_blank';
-        open.rel = 'noopener noreferrer';
-
-        ctr.appendChild(play);
-        ctr.appendChild(open);
-
-        card.appendChild(img);
-        card.appendChild(meta);
-        card.appendChild(ctr);
-        resultsEl.appendChild(card);
-      });
-    }
-
-    function togglePlay(track, btn) {
-      // stop current
-      if (currentPlayingId && currentPlayingId === track.id) {
-        // pause
-        if (currentAudio) {
-          currentAudio.pause();
-          currentAudio = null;
-          currentPlayingId = null;
-          btn.textContent = 'Play';
+        // if user pasted a YouTube URL, extract ID quickly
+        const urlId = extractYoutubeID(q);
+        let items;
+        if (urlId) {
+          // fetch video details via videos API
+          const vurl = new URL("https://www.googleapis.com/youtube/v3/videos");
+          vurl.search = new URLSearchParams({ key: API_KEY, id: urlId, part: "snippet,contentDetails" }).toString();
+          const rv = await fetch(vurl);
+          const jv = await rv.json();
+          items = jv.items || [];
+        } else {
+          items = await searchApi(q);
         }
-        return;
-      }
 
-      // stop existing audio
-      if (currentAudio) {
-        currentAudio.pause();
-        // find previous play button and reset text (best-effort)
-        const prev = document.querySelector('.audio-btn.playing');
-        if (prev) { prev.classList.remove('playing'); prev.textContent = 'Play'; }
-      }
+        if (!items.length) {
+          resultsEl.innerHTML = "<div style='color:var(--muted);padding:10px'>No results</div>";
+          return;
+        }
 
-      // if no preview URL -> open spotify instead
-      if (!track.preview_url) {
-        alert('Preview tidak tersedia untuk track ini. Buka di Spotify untuk versi lengkap.');
-        return;
-      }
-
-      const audio = new Audio(track.preview_url);
-      currentAudio = audio;
-      currentPlayingId = track.id;
-
-      // update UI
-      document.querySelectorAll('.audio-btn').forEach(b => b.classList.remove('playing'));
-      btn.classList.add('playing');
-      btn.textContent = 'Loading…';
-
-      audio.play().then(() => {
-        btn.textContent = 'Pause';
-      }).catch(err => {
+        resultsEl.innerHTML = "";
+        for (const it of items) {
+          const id = it.id?.videoId || it.id;
+          const snip = it.snippet;
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <div class="thumb"><img src="${snip.thumbnails?.mqdefault?.url || snip.thumbnails?.default?.url}" alt=""></div>
+            <div class="meta">
+              <div class="title">${escapeHtml(snip.title)}</div>
+              <div class="sub">${escapeHtml(snip.channelTitle)}</div>
+              <div style="margin-top:auto"><button data-id="${id}" data-thumb="${snip.thumbnails?.mqdefault?.url}" class="btn playBtn">Play</button></div>
+            </div>
+          `;
+          resultsEl.appendChild(card);
+        }
+        attachPlay();
+      } catch (err) {
+        resultsEl.innerHTML = `<div style='color:tomato;padding:10px'>Error: ${escapeHtml(err.message)}</div>`;
         console.error(err);
-        alert('Gagal memutar preview. Mungkin file diblokir oleh browser/HTTPs mismatch.');
-        btn.textContent = 'Play';
-        currentAudio = null;
-        currentPlayingId = null;
-      });
-
-      audio.onended = () => {
-        btn.classList.remove('playing');
-        btn.textContent = 'Play';
-        currentAudio = null;
-        currentPlayingId = null;
       }
     }
 
-    // events
-    searchBtn.addEventListener('click', doSearch);
-    qInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(); });
+    function attachPlay() {
+      const btns = document.querySelectorAll(".playBtn");
+      btns.forEach(b=>{
+        b.onclick = () => {
+          const id = b.dataset.id;
+          const thumb = b.dataset.thumb;
+          playVideo(id, thumb, b.closest(".card").querySelector(".title").textContent, b.closest(".card").querySelector(".sub").textContent);
+        };
+      });
+    }
 
-    darkBtn.addEventListener('click', () => {
-      document.documentElement.style.setProperty('--bg', '#071126');
-      document.documentElement.style.setProperty('--card', '#071d2b');
-      document.documentElement.style.setProperty('--muted', '#9fb0c7');
-      document.documentElement.style.setProperty('--accent', '#4fd1c5');
+    // minimal safe escape
+    function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+
+    // extract youtube id from link or return null
+    function extractYoutubeID(s){
+      try{
+        const url = new URL(s);
+        if (url.hostname.includes("youtu.be")) return url.pathname.slice(1);
+        if (url.searchParams.get("v")) return url.searchParams.get("v");
+        return null;
+      }catch(e){
+        return null;
+      }
+    }
+
+    // Player logic using IFrame API
+    let player;
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player("ytplayer", {
+        height: "0", width: "0", videoId: "", playerVars: {
+          playsinline: 1,
+          origin: location.origin,
+          rel: 0,
+          modestbranding: 1
+        },
+        events: {
+          onReady: () => {},
+          onStateChange: onPlayerStateChange
+        }
+      });
+    }
+
+    // Create hidden iframe container required by API
+    const ifr = document.createElement("div");
+    ifr.id = "ytplayer";
+    ifr.style.display = "none";
+    document.body.appendChild(ifr);
+
+    function onPlayerStateChange(e){
+      const st = e.data;
+      const playBtn = el("play");
+      if(st === YT.PlayerState.PLAYING) playBtn.textContent = "⏸";
+      else playBtn.textContent = "▶️";
+    }
+
+    function playVideo(id, thumb, title, channel){
+      if(!player) return alert("Player belum siap. Tunggu beberapa detik lalu coba lagi.");
+      player.loadVideoById(id);
+      // show player UI
+      el("player").classList.remove("hidden");
+      el("pthumb").querySelector("img").src = thumb;
+      el("ptitle").textContent = title;
+      el("pchannel").textContent = channel;
+      // set up prev/next minimal (not implemented full playlist here)
+      currentVideoId = id;
+    }
+
+    // simple controls
+    let currentVideoId = null;
+    document.addEventListener("click", (ev)=>{
+      if(ev.target.matches("#go")){
+        const q = el("q").value.trim();
+        if(!q) return;
+        doSearch(q);
+      }
+      if(ev.target.matches("#play")){
+        if(!player) return;
+        const state = player.getPlayerState();
+        if(state === YT.PlayerState.PLAYING) player.pauseVideo();
+        else player.playVideo();
+      }
+      if(ev.target.matches("#prev")) { player.seekTo(0); }
+      if(ev.target.matches("#next")) { player.stopVideo(); }
     });
 
-    // quick demo: if there's query param q in URL, run search automatically
-    (function autoSearchFromQuery() {
-      const params = new URLSearchParams(location.search);
-      if (params.get('q')) {
-        qInput.value = params.get('q');
-        doSearch();
-      }
-    })();
+    // allow Enter to search
+    el("q").addEventListener("keydown", (e)=>{
+      if(e.key === "Enter") el("go").click();
+    });
+
+    // initialize: small demo search
+    window.addEventListener("load", ()=> {
+      // optional: prefill a sample
+      // el("q").value = "Billie Eilish bad guy";
+      // doSearch(el("q").value);
+    });
+
+    // The script relies on the global YT object created by the IFrame API.
+    // If API not loaded yet, the onYouTubeIframeAPIReady() callback will create the player.
   </script>
 </body>
 </html>
